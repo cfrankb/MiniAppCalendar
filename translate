@@ -1,0 +1,3 @@
+lupdate MiniAppCalendar.pro 
+lrelease MiniAppCalendar.pro
+

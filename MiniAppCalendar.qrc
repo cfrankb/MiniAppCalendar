@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/images" >
+        <file>images/current.gif</file>
+        <file>images/memo.gif</file>
+        <file>images/new.gif</file>
+        <file>images/next.gif</file>
+        <file>images/open.gif</file>
+        <file>images/prev.gif</file>
+        <file>images/save.gif</file>
+        <file alias="icon.gif" >images/icon.gif</file>
+    </qresource>
+    <qresource prefix="/translations" >
+        <file alias="translation_fr.qm" >translations/translation_fr.qm</file>
+    </qresource>
+</RCC>
