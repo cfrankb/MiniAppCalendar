@@ -254,7 +254,12 @@ void MainWindow::on_actionSave_triggered()
 void MainWindow::on_actionSave_as_triggered()
 {
     doc.saveMonth(date.year(), date.month(), textFields);
-    saveAs();
+    if (saveAs()) {
+        if (!doc.writeFile() || !updateTitle())  {
+            warningMessage(tr("Can't write file"));
+        }
+    }
+    updateTitle();
 }
 
 void MainWindow::on_actionNew_File_triggered()
@@ -323,7 +328,7 @@ bool MainWindow::open(QString fileName)
             QString oldFileName = doc.getFileName();
             doc.setFileName(fileName);
             if (!doc.readFile())  {
-                warningMessage(tr("cannot open file") + "\n" + doc.getLastError());
+                warningMessage(tr("cannot open file: %1").arg(doc.getLastError()));
                 doc.setFileName(oldFileName);
 
                 // update fileList
@@ -363,20 +368,27 @@ bool MainWindow::save()
         doc.setFileName(oldFileName);
         return false;
     }
-
     return true;
 }
 
 bool MainWindow::saveAs()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"), doc.getFileName(), tr(fileFilter));
+    QFileDialog* fd = new QFileDialog( this,  tr("Save As"));
+    fd->setNameFilter(tr(fileFilter));
+    fd->setDefaultSuffix("pca");
+    fd->setFileMode(QFileDialog::AnyFile);
+    fd->setAcceptMode(QFileDialog::AcceptSave);
+    fd->selectFile(doc.getFileName());
+    QString fileName = "";
+    if ( fd->exec() == QDialog::Accepted ) {
+       QStringList list = fd->selectedFiles();
+       fileName = list.first();
+    }
+    delete fd;
     if (fileName.isEmpty())
         return false;
-
     doc.setFileName(fileName);
     return true;
-//
-  //  return doc.writeFile() && updateTitle();
 }
 
 bool MainWindow::updateTitle()
@@ -415,7 +427,7 @@ void MainWindow::updateRecentFileActions()
     QSettings settings(author, appName);
     QStringList files = settings.value("recentFileList").toStringList();
 
-    int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
+    int numRecentFiles = qMin(files.size(), static_cast<int>(MaxRecentFiles));
 
     for (int i = 0; i < numRecentFiles; ++i) {
 
