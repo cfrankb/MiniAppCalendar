@@ -38,7 +38,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -71,6 +71,9 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <addaction name="actionhighlight"/>
+    <addaction name="actiongrey_out_past"/>
+    <addaction name="actionApply_rules"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Month"/>
@@ -224,6 +227,30 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="menuRole">
     <enum>QAction::AboutQtRole</enum>
+   </property>
+  </action>
+  <action name="actionhighlight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Highlight today</string>
+   </property>
+  </action>
+  <action name="actiongrey_out_past">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grey out past</string>
+   </property>
+  </action>
+  <action name="actionApply_rules">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Apply rules</string>
    </property>
   </action>
  </widget>

@@ -31,6 +31,6 @@ MemoDialog::MemoDialog(QWidget *parent)
 
 void MemoDialog::resizeEvent(QResizeEvent *event)
 {
-    Q_UNUSED(event);
+    Q_UNUSED(event)
     memoText->setGeometry(QRect(0,0,width(), okButton->y() - 16));
 }

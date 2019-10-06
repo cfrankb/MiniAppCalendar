@@ -19,7 +19,7 @@ void Document::forget()
     delete [] dailyText;
     delete [] months;
     delete [] years;
-    delete [] memos; ;
+    delete [] memos;
 }
 
 void Document::empty()
@@ -36,10 +36,10 @@ void Document::init()
     fileName = "";
     dirty = false;
 
-    dailyText = new Month[maxMonths];
-    months = new int[maxMonths];
-    years = new int[maxMonths];
-    memos = new QString[maxMonths];
+    dailyText = new Month[static_cast<unsigned int>(maxMonths)];
+    months = new int[static_cast<unsigned int>(maxMonths)];
+    years = new int[static_cast<unsigned int>(maxMonths)];
+    memos = new QString[static_cast<unsigned int>(maxMonths)];
 }
 
 int Document::findMonth(int year, int month) {
@@ -121,7 +121,7 @@ void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
         QString str = textFields[day]->toPlainText();
 
         // fix for an old bug in the original MFC implementation of MiniAppCalendar
-        if (str == NULL || textFields[day]->isHidden()){
+        if (str == nullptr || textFields[day]->isHidden()){
             str = "";
         }
 
@@ -153,8 +153,7 @@ bool Document::writeFile()
 {
     QByteArray ba = fileName.toLocal8Bit();// fileName.toAscii();
     FILE *tfile = fopen(ba.constData(), "wb");
-    if (!tfile)
-    {
+    if (!tfile) {
         qDebug() << "write error" << "\n";
         lastError = ERR_WRITE;
         return false;
@@ -223,9 +222,8 @@ void Document::writeString(FILE *tfile, QString str)
     // TODO implement full 32 bits
     if (size < 255) {
         fwrite(&size, 1, 1, tfile);
-    }
-    else {
-        char b = 255;
+    } else {
+        unsigned char b = 255;
         fwrite(&b, 1, 1, tfile);
         fwrite(&size, 2, 1, tfile);
     }
@@ -235,7 +233,7 @@ void Document::writeString(FILE *tfile, QString str)
 
 QString Document::readString(FILE *sfile)
 {
-    int size = 0;
+    unsigned int size = 0;
     fread(&size, 1, 1, sfile);
     //TODO: implement full 32bits
     if (size == 255) {

@@ -36,9 +36,17 @@ private:
     QLabel **labelNumbers;
     QAction *recentFileActs[MaxRecentFiles];
     QAction *separatorAct[1];
+    const char *colorDate(int day_count, QString &text);
+    const char *applyRules(const QString &text);
 
     Document doc;
     bool ready;
+
+    bool highlightToggle;
+    bool greyOutPastToggle;
+    bool applyRulesToggle;
+
+    void restoreSettings();
 
     QString getMonthName(int);
     int getMonthSize(int, int);
@@ -79,6 +87,11 @@ private slots:
 
     void on_actionAbout_Qt_triggered();
     void on_actionAbout_triggered();
+    void on_actionhighlight_toggled(bool arg1);
+    void on_actiongrey_out_past_toggled(bool arg1);
+
+    void colorTextbox();
+    void on_actionApply_rules_toggled(bool arg1);
 };
 
 #endif // MAINWINDOW_H

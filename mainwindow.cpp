@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    restoreSettings();
     initFileMenu();
     initToolBar();
     initCalendar();
@@ -24,12 +25,70 @@ MainWindow::MainWindow(QWidget *parent)
     actionToolBar->setStatusTip(tr("Show or hide toolbar"));
     ui->menuView->addAction(actionToolBar);
 
+    ui->actiongrey_out_past->setChecked(greyOutPastToggle);
+    ui->actionhighlight->setChecked(highlightToggle);
+    ui->actionApply_rules->setChecked(applyRulesToggle);
     updateTitle();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+const char *MainWindow::applyRules(const QString &text)
+{
+#define CONTAINS 0
+#define STARTSWITH 1
+#define ENDSWITH 2
+
+    typedef struct {
+        long op;
+        const char *pattern;
+        const char *color;
+    } RULE;
+
+    RULE rules[] = {
+        {CONTAINS, "PTO", "QPlainTextEdit {background-color: yellow;}"},
+        {CONTAINS, "VACATIONS", "QPlainTextEdit {background-color: pink;}"},
+        {STARTSWITH, "***", "QPlainTextEdit {background-color: orange;}"},
+        {CONTAINS, "STATS HOLIDAY", "QPlainTextEdit {background-color: lime;}"},
+        {STARTSWITH, "@@@", "QPlainTextEdit {background-color: gray;}"},
+        {STARTSWITH, "$$$", "QPlainTextEdit {background-color: green;}"},
+    };
+
+    for (unsigned int i=0; i < sizeof(rules)/sizeof(RULE); ++i) {
+        RULE & rule = rules[i];
+        if (rule.op == CONTAINS && text.contains(rule.pattern))  {
+            return rule.color;
+        } else if (rule.op == STARTSWITH && text.startsWith(rule.pattern))  {
+            return rule.color;
+        } else if (rule.op == ENDSWITH && text.endsWith(rule.pattern))  {
+            return rule.color;
+        }
+    }
+    return "";
+}
+
+const char *MainWindow::colorDate(int day_count, QString & text)
+{
+    QDateTime now = QDateTime::currentDateTime();
+    int today_year = 0;
+    int today_month = 0;
+    int today_day = 0;
+    now.date().getDate(&today_year, &today_month, &today_day);
+    int nowAbs = Document::monthAbs(today_year, today_month);
+    int currentAbs = Document::monthAbs(date.year(), date.month());
+    if (currentAbs < nowAbs && greyOutPastToggle) {
+        return "QPlainTextEdit {background-color: #eeeeee;}";
+    } else if (currentAbs == nowAbs) {
+        if ((day_count < today_day + 1) && greyOutPastToggle) {
+            return "QPlainTextEdit {background-color: #eeeeee;}";
+        } else if ((day_count == today_day + 1) && highlightToggle)  {
+            return "QPlainTextEdit {background-color: #ffffee;}";
+        }
+    }
+    return applyRulesToggle ? applyRules(text) : "";
 }
 
 void MainWindow::initCalendar()
@@ -72,7 +131,6 @@ void MainWindow::initCalendar()
     for (y = 0; y < 6; y++) {
         for (x = 0; x < 7; x++) {
             dd = x + y * 7;
-
             textFields[dd] =  new QPlainTextEdit(ui->centralWidget);
             textFields[dd]->setObjectName(QString::fromUtf8("textFields") + QString::number(dd));
             textFields[dd]->setGeometry(QRect(baseX + (len + space) * x, baseY + y * (hei + space), len, hei));
@@ -80,20 +138,24 @@ void MainWindow::initCalendar()
             textFields[dd]->setMouseTracking(false);
             textFields[dd]->setFrameShape(QFrame::Box);
             textFields[dd]->setMidLineWidth(1);
-
             if (dd >= day && day_count <= getMonthSize(date.year(), date.month())) {
                 text = QString("   " + QString::number(day_count));
-                day_count++;
                 textFields[dd]->setVisible(true);
             } else {
                 text = QString("");
                 textFields[dd]->setVisible(false);
             }
-
+            day_count++;
+            QString dayText = "";
+            textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
             labelNumbers[dd] = new QLabel(ui->centralWidget);
             labelNumbers[dd]->setObjectName(QString::fromUtf8("labelNum") + QString::number(dd));
             labelNumbers[dd]->setGeometry(QRect(baseX + (len + space) * x + len - 32, baseY + y * (hei + space) - space, 32, 10));
             labelNumbers[dd]->setText(text);
+            labelNumbers[dd]->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
+            labelNumbers[dd]->setVisible(!text.isEmpty());
+            QObject::connect(textFields[dd], &QPlainTextEdit::textChanged,
+                             this, &MainWindow::colorTextbox);
         }
     }
 
@@ -113,6 +175,11 @@ void MainWindow::initCalendar()
         labelDays[x]->setGeometry(QRect(baseX + (len + space) * x, baseY - space, 32, 10));
         labelDays[x]->setText(days[x].mid(0,3));
     }
+}
+
+void MainWindow::colorTextbox()
+{
+    qDebug("color textbox");
 }
 
 QString MainWindow::getMonthName(int month) {
@@ -171,23 +238,25 @@ void MainWindow::updateCalendar() {
     for (y = 0; y < 6; y++) {
         for (x = 0; x < 7; x++) {
             dd = x + y * 7;
+            QString dayText = "";
             if (dd >= day && day_count <= monthSize) {
                 text = QString("   " + QString::number(day_count));
                 day_count++;
                 textFields[dd]->setVisible(true);
                 if (monthIndex != -1) {
-                    textFields[dd]->setPlainText(doc.getDailyText(monthIndex, dd));
+                    dayText = doc.getDailyText(monthIndex, dd);
+                    textFields[dd]->setPlainText(dayText);
                 }
                 else {
                     textFields[dd]->setPlainText("");
                 }
-
+                textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
             } else {
                 text = "";
                 textFields[dd]->setVisible(false);
             }
-
             labelNumbers[dd]->setText(text);
+            labelNumbers[dd]->setVisible(!text.isEmpty());
         }
     }
 }
@@ -337,10 +406,8 @@ bool MainWindow::open(QString fileName)
                 files.removeAll(fileName);
                 settings.setValue("recentFileList", files);
                 updateRecentFileActions();
-//                QString fileName = doc.getFileName();
                 return false;
             }
-
             updateTitle();
             updateCalendar();
         }
@@ -445,10 +512,6 @@ void MainWindow::updateRecentFileActions()
 
 void MainWindow::initFileMenu()
 {
-    //actionClose = new QAction(MainWindow);
-    //actionClose->setObjectName(QString::fromUtf8("actionClose"));
-    // complete the File menu
-
     ui->menu_File->addSeparator();
 
     for (int i = 0; i < MaxRecentFiles; i++) {
@@ -467,7 +530,6 @@ void MainWindow::initFileMenu()
     ui->actionClose->setMenuRole(QAction::QuitRole);
 
     ui->menu_File->addAction(ui->actionClose);
-
 }
 
 void MainWindow::initToolBar()
@@ -504,7 +566,7 @@ void MainWindow::on_actionMemo_triggered()
 
 void MainWindow::warningMessage(QString message)
 {
-    QMessageBox msgBox(QMessageBox::Warning, appName, message, 0, this);
+    QMessageBox msgBox(QMessageBox::Warning, appName, message, nullptr, this);
     msgBox.exec();
 }
 
@@ -517,4 +579,42 @@ void MainWindow::on_actionAbout_triggered()
 {
     DlgAbout dlg;
     dlg.exec();
+}
+
+void MainWindow::on_actionhighlight_toggled(bool arg1)
+{
+    QSettings settings(author, appName);
+    highlightToggle = arg1;
+    settings.setValue("visual/highlight_toggle", arg1);
+    settings.sync();
+    doc.saveMonth(date.year(), date.month(), textFields);
+    updateCalendar();
+}
+
+void MainWindow::on_actiongrey_out_past_toggled(bool arg1)
+{
+    QSettings settings(author, appName);
+    greyOutPastToggle = arg1;
+    settings.setValue("visual/grey_out_past_toggle", arg1);
+    settings.sync();
+    doc.saveMonth(date.year(), date.month(), textFields);
+    updateCalendar();
+}
+
+void MainWindow::on_actionApply_rules_toggled(bool arg1)
+{
+    QSettings settings(author, appName);
+    applyRulesToggle = arg1;
+    settings.setValue("visual/apply_rules_toggle", arg1);
+    settings.sync();
+    doc.saveMonth(date.year(), date.month(), textFields);
+    updateCalendar();
+}
+
+void MainWindow::restoreSettings()
+{
+    QSettings settings(author, appName);
+    highlightToggle = settings.value("visual/highlight_toggle").value<bool>();
+    greyOutPastToggle = settings.value("visual/grey_out_past_toggle").value<bool>();
+    applyRulesToggle = settings.value("visual/apply_rules_toggle").value<bool>();
 }

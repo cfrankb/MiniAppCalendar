@@ -33,6 +33,9 @@ public:
 
     bool writeFile();
     bool readFile();
+    static int monthAbs(int year, int month) {
+        return year * 12 + month - 1;
+    }
 
     int getLastError() const;
 
