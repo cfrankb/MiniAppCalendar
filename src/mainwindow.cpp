@@ -179,7 +179,7 @@ void MainWindow::initCalendar()
 
 void MainWindow::colorTextbox()
 {
-    qDebug("color textbox");
+    //qDebug("color textbox");
 }
 
 QString MainWindow::getMonthName(int month) {

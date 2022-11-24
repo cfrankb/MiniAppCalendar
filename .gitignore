@@ -1,0 +1,10 @@
+build-*
+src/MiniAppCalendar.pro.user
+src/Makefile
+src/qrc_*.cpp
+src/moc_*.cpp
+src/moc_*.h
+src/ui_*.h
+src/MiniAppCalendar
+.qtc_clangd/
+*.o
