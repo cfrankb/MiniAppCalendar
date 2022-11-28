@@ -218,7 +218,7 @@ bool Document::readFile()
 
 void Document::writeString(FILE *tfile, QString str)
 {
-    int size = str.length();
+    int size =  strlen(str.toStdString().c_str());
     // TODO implement full 32 bits
     if (size < 255) {
         fwrite(&size, 1, 1, tfile);
