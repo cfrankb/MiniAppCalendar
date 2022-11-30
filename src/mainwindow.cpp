@@ -1,11 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtGui>
-#include "memodialog.h"
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QLabel>
+#include <QtDebug>
+#include <QPlainTextEdit>
 #include "dlgabout.h"
+#include "memodialog.h"
 
 static char appName[] = "MiniApp Calendar";
 static char author[] = "cfrankb";
@@ -79,7 +82,7 @@ const char *MainWindow::colorDate(int day_count, QString & text)
     int today_day = 0;
     now.date().getDate(&today_year, &today_month, &today_day);
     int nowAbs = Document::monthAbs(today_year, today_month);
-    int currentAbs = Document::monthAbs(date.year(), date.month());
+    int currentAbs = Document::monthAbs(m_date.year(), m_date.month());
     if (currentAbs < nowAbs && greyOutPastToggle) {
         return "QPlainTextEdit {background-color: #eeeeee;}";
     } else if (currentAbs == nowAbs) {
@@ -104,15 +107,15 @@ void MainWindow::initCalendar()
 
     QFont font;
 
-    date = QDate::currentDate();
-    date.setDate(date.year(), date.month(), 1);
-    int day = date.dayOfWeek() % 7 ;
+    m_date = QDate::currentDate();
+    m_date.setDate(m_date.year(), m_date.month(), 1);
+    int day = m_date.dayOfWeek() % 7 ;
 
-    textFields =  new QPlainTextEdit * [42];
-    labelDays = new QLabel * [7];
-    labelNumbers = new QLabel * [42];
+    m_textFields =  new QPlainTextEdit * [42];
+    m_labelDays = new QLabel * [7];
+    m_labelNumbers = new QLabel * [42];
 
-    QString text = getMonthName(date.month()) + " " + QString::number(date.year());
+    QString text = QString("%1 %2").arg(getMonthName(m_date.month())).arg(m_date.year());
     ui->labelMonth->setText(text);
 
 #ifdef Q_WS_WIN
@@ -132,30 +135,30 @@ void MainWindow::initCalendar()
     for (y = 0; y < 6; y++) {
         for (x = 0; x < 7; x++) {
             dd = x + y * 7;
-            textFields[dd] =  new QPlainTextEdit(ui->centralWidget);
-            textFields[dd]->setObjectName(QString::fromUtf8("textFields") + QString::number(dd));
-            textFields[dd]->setGeometry(QRect(baseX + (len + space) * x, baseY + y * (hei + space), len, hei));
-            textFields[dd]->setFont(font);
-            textFields[dd]->setMouseTracking(false);
-            textFields[dd]->setFrameShape(QFrame::Box);
-            textFields[dd]->setMidLineWidth(1);
-            if (dd >= day && day_count <= getMonthSize(date.year(), date.month())) {
+            m_textFields[dd] =  new QPlainTextEdit(ui->centralWidget);
+            m_textFields[dd]->setObjectName(QString::fromUtf8("textFields") + QString::number(dd));
+            m_textFields[dd]->setGeometry(QRect(baseX + (len + space) * x, baseY + y * (hei + space), len, hei));
+            m_textFields[dd]->setFont(font);
+            m_textFields[dd]->setMouseTracking(false);
+            m_textFields[dd]->setFrameShape(QFrame::Box);
+            m_textFields[dd]->setMidLineWidth(1);
+            if (dd >= day && day_count <= getMonthSize(m_date.year(), m_date.month())) {
                 text = QString("   " + QString::number(day_count));
-                textFields[dd]->setVisible(true);
+                m_textFields[dd]->setVisible(true);
             } else {
                 text = QString("");
-                textFields[dd]->setVisible(false);
+                m_textFields[dd]->setVisible(false);
             }
             day_count++;
             QString dayText = "";
-            textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
-            labelNumbers[dd] = new QLabel(ui->centralWidget);
-            labelNumbers[dd]->setObjectName(QString::fromUtf8("labelNum") + QString::number(dd));
-            labelNumbers[dd]->setGeometry(QRect(baseX + (len + space) * x + len - 32, baseY + y * (hei + space) - space, 32, 10));
-            labelNumbers[dd]->setText(text);
-            labelNumbers[dd]->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
-            labelNumbers[dd]->setVisible(!text.isEmpty());
-            QObject::connect(textFields[dd], &QPlainTextEdit::textChanged,
+            m_textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
+            m_labelNumbers[dd] = new QLabel(ui->centralWidget);
+            m_labelNumbers[dd]->setObjectName(QString::fromUtf8("labelNum") + QString::number(dd));
+            m_labelNumbers[dd]->setGeometry(QRect(baseX + (len + space) * x + len - 32, baseY + y * (hei + space) - space, 32, 10));
+            m_labelNumbers[dd]->setText(text);
+            m_labelNumbers[dd]->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
+            m_labelNumbers[dd]->setVisible(!text.isEmpty());
+            QObject::connect(m_textFields[dd], &QPlainTextEdit::textChanged,
                              this, &MainWindow::colorTextbox);
         }
     }
@@ -171,10 +174,10 @@ void MainWindow::initCalendar()
     };
 
     for (x = 0; x < 7; x++) {
-        labelDays[x] = new QLabel(ui->centralWidget);
-        labelDays[x]->setObjectName(QString::fromUtf8("labelDay") + QString::number(x));
-        labelDays[x]->setGeometry(QRect(baseX + (len + space) * x, baseY - space, 32, 10));
-        labelDays[x]->setText(days[x].mid(0,3));
+        m_labelDays[x] = new QLabel(ui->centralWidget);
+        m_labelDays[x]->setObjectName(QString::fromUtf8("labelDay") + QString::number(x));
+        m_labelDays[x]->setGeometry(QRect(baseX + (len + space) * x, baseY - space, 32, 10));
+        m_labelDays[x]->setText(days[x].mid(0,3));
     }
 }
 
@@ -209,7 +212,7 @@ QString MainWindow::getMonthName(int month) {
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     if (maybeSave()) {
         event->accept();
     } else {
@@ -226,15 +229,14 @@ void MainWindow::resizeEvent (QResizeEvent *event)
 
 void MainWindow::updateCalendar() {
 
-    QString text = getMonthName(date.month()) + " " + QString::number(date.year());
+    QString text = QString("%1 %2").arg(getMonthName(m_date.month())).arg(m_date.year());
     ui->labelMonth->setText(text);
 
-    int day = date.dayOfWeek() % 7;
-
+    int day = m_date.dayOfWeek() % 7;
     int x, y, dd;
     int day_count = 1;
-    int monthSize = getMonthSize(date.year(), date.month());
-    int monthIndex =  doc.findMonth(date.year(), date.month());
+    int monthSize = getMonthSize(m_date.year(), m_date.month());
+    int monthIndex = m_doc.findMonth(m_date.year(), m_date.month());
 
     for (y = 0; y < 6; y++) {
         for (x = 0; x < 7; x++) {
@@ -243,21 +245,21 @@ void MainWindow::updateCalendar() {
             if (dd >= day && day_count <= monthSize) {
                 text = QString("   %1").arg(day_count);
                 day_count++;
-                textFields[dd]->setVisible(true);
+                m_textFields[dd]->setVisible(true);
                 if (monthIndex != -1) {
-                    dayText = doc.getDailyText(monthIndex, dd);
-                    textFields[dd]->setPlainText(dayText);
+                    dayText = m_doc.getDailyText(monthIndex, dd);
+                    m_textFields[dd]->setPlainText(dayText);
                 }
                 else {
-                    textFields[dd]->setPlainText("");
+                    m_textFields[dd]->setPlainText("");
                 }
-                textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
+                m_textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
             } else {
                 text = "";
-                textFields[dd]->setVisible(false);
+                m_textFields[dd]->setVisible(false);
             }
-            labelNumbers[dd]->setText(text);
-            labelNumbers[dd]->setVisible(!text.isEmpty());
+            m_labelNumbers[dd]->setText(text);
+            m_labelNumbers[dd]->setVisible(!text.isEmpty());
         }
     }
 }
@@ -277,55 +279,60 @@ void MainWindow::resizeControls(int width, int height) {
     for (int y = 0; y < 6; y ++) {
         for (int x = 0; x < 7; x ++) {
             int dd = x + y * 7;
-            textFields[dd]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY + y * (hei + spaceY), len, hei));
-            labelNumbers[dd]->setGeometry(QRect(baseX + (len + spaceX) * x + len - 32, baseY + y * (hei + spaceY) - spaceY, 32, 10));
+            m_textFields[dd]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY + y * (hei + spaceY), len, hei));
+            m_labelNumbers[dd]->setGeometry(QRect(baseX + (len + spaceX) * x + len - 32, baseY + y * (hei + spaceY) - spaceY, 32, 10));
         }
     }
 
     for (int x = 0; x < 7; x++) {
-        labelDays[x]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY - spaceY, 32, 10));
+        m_labelDays[x]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY - spaceY, 32, 10));
     }
+}
+
+void MainWindow::saveCurrentMonth()
+{
+    m_doc.saveMonth(m_date.year(), m_date.month(), m_textFields);
 }
 
 void MainWindow::on_actionPrevious_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
-    date = date.addMonths(-1);
+    saveCurrentMonth();
+    m_date = m_date.addMonths(-1);
     updateCalendar();
 }
 
 void MainWindow::on_actionNext_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
-    date = date.addMonths(1);
+    saveCurrentMonth();
+    m_date = m_date.addMonths(1);
     updateCalendar();
 }
 
 void MainWindow::on_actionCurrent_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
-    date = QDate::currentDate();
-    date.setDate(date.year(), date.month(), 1);
+    saveCurrentMonth();
+    m_date = QDate::currentDate();
+    m_date.setDate(m_date.year(), m_date.month(), 1);
     updateCalendar();
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     open("");
 }
 
 void MainWindow::on_actionSave_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     save();
 }
 
 void MainWindow::on_actionSave_as_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     if (saveAs()) {
-        if (!doc.writeFile() || !updateTitle())  {
+        if (!m_doc.writeFile() || !updateTitle())  {
             warningMessage(tr("Can't write file"));
         }
     }
@@ -334,14 +341,14 @@ void MainWindow::on_actionSave_as_triggered()
 
 void MainWindow::on_actionNew_File_triggered()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     newFile();
 }
 
 bool MainWindow::newFile()
 {
     if (maybeSave()) {
-        doc.empty();
+        m_doc.empty();
         updateTitle();
         updateCalendar();
     }
@@ -350,8 +357,7 @@ bool MainWindow::newFile()
 
 void MainWindow::openRecentFile()
 {
-    doc.saveMonth(date.year(), date.month(), textFields);
-
+    saveCurrentMonth();
     QAction *action = qobject_cast<QAction *>(sender());
     if (action)
         open(action->data().toString());
@@ -359,7 +365,7 @@ void MainWindow::openRecentFile()
 
 bool MainWindow::maybeSave()
 {
-    if (doc.isDirty()) {
+    if (m_doc.isDirty()) {
         QMessageBox::StandardButton ret;
         ret = QMessageBox::warning(this, tr(appName),
                      tr("The document has been modified.\n"
@@ -393,11 +399,11 @@ bool MainWindow::open(QString fileName)
             fileName = QFileDialog::getOpenFileName(this, "", fileName, tr(fileFilter));
         }
         if (!fileName.isEmpty()) {
-            QString oldFileName = doc.getFileName();
-            doc.setFileName(fileName);
-            if (!doc.readFile())  {
-                warningMessage(tr("cannot open file: %1").arg(doc.getLastError()));
-                doc.setFileName(oldFileName);
+            QString oldFileName = m_doc.getFileName();
+            m_doc.setFileName(fileName);
+            if (!m_doc.readFile())  {
+                warningMessage(tr("cannot open file: %1").arg(m_doc.getLastError()));
+                m_doc.setFileName(oldFileName);
                 // update fileList
                 QSettings settings(author, appName);
                 QStringList files = settings.value("recentFileList").toStringList();
@@ -420,16 +426,15 @@ bool MainWindow::open(QString fileName)
 
 bool MainWindow::save()
 {
-    QString oldFileName = doc.getFileName();
-
-    if (doc.isUntitled()) {
+    QString oldFileName = m_doc.getFileName();
+    if (m_doc.isUntitled()) {
         if (!saveAs())
             return false;
     }
 
-    if (!doc.writeFile() || !updateTitle())  {
+    if (!m_doc.writeFile() || !updateTitle())  {
         warningMessage(tr("Can't write file"));
-        doc.setFileName(oldFileName);
+        m_doc.setFileName(oldFileName);
         return false;
     }
     return true;
@@ -442,7 +447,7 @@ bool MainWindow::saveAs()
     fd->setDefaultSuffix("pca");
     fd->setFileMode(QFileDialog::AnyFile);
     fd->setAcceptMode(QFileDialog::AcceptSave);
-    fd->selectFile(doc.getFileName());
+    fd->selectFile(m_doc.getFileName());
     QString fileName = "";
     if ( fd->exec() == QDialog::Accepted ) {
        QStringList list = fd->selectedFiles();
@@ -451,28 +456,26 @@ bool MainWindow::saveAs()
     delete fd;
     if (fileName.isEmpty())
         return false;
-    doc.setFileName(fileName);
+    m_doc.setFileName(fileName);
     return true;
 }
 
 bool MainWindow::updateTitle()
 {
     QString file;
-
-    if (doc.getFileName().isEmpty()) {
+    if (m_doc.getFileName().isEmpty()) {
         file = tr("untitled");
     } else {
-        file = QFileInfo(doc.getFileName()).fileName();
+        file = QFileInfo(m_doc.getFileName()).fileName();
     }
 
-    doc.setDirty(false);
+    m_doc.setDirty(false);
     setWindowTitle(tr("%1[*] - %2").arg(file, appName));
 
     // update fileList
-
     QSettings settings(author, appName);
     QStringList files = settings.value("recentFileList").toStringList();
-    QString fileName = doc.getFileName();
+    QString fileName = m_doc.getFileName();
     files.removeAll(fileName);
     if (!fileName.isEmpty()) {
         files.prepend(fileName);
@@ -482,7 +485,6 @@ bool MainWindow::updateTitle()
 
     settings.setValue("recentFileList", files);
     updateRecentFileActions();
-
     return true;
 }
 
@@ -492,34 +494,31 @@ void MainWindow::updateRecentFileActions()
     QStringList files = settings.value("recentFileList").toStringList();
 
     int numRecentFiles = qMin(files.size(), static_cast<int>(MaxRecentFiles));
-
     for (int i = 0; i < numRecentFiles; ++i) {
-
         QString text = tr("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
-        recentFileActs[i]->setText(text);
-        recentFileActs[i]->setData(files[i]);
-        recentFileActs[i]->setVisible(true);
-        recentFileActs[i]->setStatusTip(files[i]);
+        m_recentFileActs[i]->setText(text);
+        m_recentFileActs[i]->setData(files[i]);
+        m_recentFileActs[i]->setVisible(true);
+        m_recentFileActs[i]->setStatusTip(files[i]);
     }
     for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
-        recentFileActs[j]->setVisible(false);
+        m_recentFileActs[j]->setVisible(false);
 
-    separatorAct[0]->setVisible(numRecentFiles > 0);
+    m_separatorAct[0]->setVisible(numRecentFiles > 0);
 }
 
 void MainWindow::initFileMenu()
 {
     ui->menu_File->addSeparator();
-
     for (int i = 0; i < MaxRecentFiles; i++) {
-        recentFileActs[i] = new QAction(this);
-        recentFileActs[i]->setVisible(false);
-        ui->menu_File->addAction(recentFileActs[i]);
-        connect(recentFileActs[i], SIGNAL(triggered()),
+        m_recentFileActs[i] = new QAction(this);
+        m_recentFileActs[i]->setVisible(false);
+        ui->menu_File->addAction(m_recentFileActs[i]);
+        connect(m_recentFileActs[i], SIGNAL(triggered()),
                 this, SLOT(openRecentFile()));
     }
 
-    separatorAct[0] = ui->menu_File->addSeparator();
+    m_separatorAct[0] = ui->menu_File->addSeparator();
     ui->actionClose->setStatusTip(tr("Close the application"));
     updateRecentFileActions();
 
@@ -546,24 +545,26 @@ void MainWindow::on_actionMemo_triggered()
 {
     MemoDialog *dialog = new MemoDialog(this);
     dialog->setWindowIcon(QIcon(":/images/images/memo.gif"));
-    dialog->setWindowTitle( getMonthName(date.month()) + " " + QString::number(date.year()));
-    QString oldText = doc.getMemo(date.year(), date.month());
-    dialog->memoText->setText(oldText);
+    QString text = QString("%1 %2").arg(getMonthName(m_date.month())).arg(m_date.year());
+    dialog->setWindowTitle(text);
+    QString oldText = m_doc.getMemo(m_date.year(), m_date.month());
+    dialog->memoText->setPlainText(oldText);
     if (dialog->exec()) {
         QString newText = Document::restoreCR(dialog->memoText->toPlainText());
         if (newText != oldText) {
-            doc.saveMonth(date.year(), date.month(), textFields);
-            doc.setMemo(date.year(), date.month(), newText);
-            doc.setDirty(true);
+            saveCurrentMonth();
+            m_doc.setMemo(m_date.year(), m_date.month(), newText);
+            m_doc.setDirty(true);
         }
     }
-
     delete dialog;
 }
 
 void MainWindow::warningMessage(QString message)
 {
-    QMessageBox msgBox(QMessageBox::Warning, appName, message, nullptr, this);
+    QMessageBox msgBox(this);
+    msgBox.setText(message);
+    msgBox.setIcon(QMessageBox::Warning);
     msgBox.exec();
 }
 
@@ -584,7 +585,7 @@ void MainWindow::on_actionhighlight_toggled(bool arg1)
     highlightToggle = arg1;
     settings.setValue("visual/highlight_toggle", arg1);
     settings.sync();
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     updateCalendar();
 }
 
@@ -594,7 +595,7 @@ void MainWindow::on_actiongrey_out_past_toggled(bool arg1)
     greyOutPastToggle = arg1;
     settings.setValue("visual/grey_out_past_toggle", arg1);
     settings.sync();
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     updateCalendar();
 }
 
@@ -604,7 +605,7 @@ void MainWindow::on_actionApply_rules_toggled(bool arg1)
     applyRulesToggle = arg1;
     settings.setValue("visual/apply_rules_toggle", arg1);
     settings.sync();
-    doc.saveMonth(date.year(), date.month(), textFields);
+    saveCurrentMonth();
     updateCalendar();
 }
 
@@ -618,7 +619,7 @@ void MainWindow::restoreSettings()
 
 void MainWindow::on_actionMonth_Go_to_year_triggered()
 {
-    int year = date.year();
+    int year = m_date.year();
     bool ok;
      QString text = QInputDialog::getText(this, tr("Go to Year"),
                                           tr("Year:"), QLineEdit::Normal,
@@ -626,11 +627,10 @@ void MainWindow::on_actionMonth_Go_to_year_triggered()
 
      if (ok && !text.isEmpty()){
          int newYear = text.toInt();
-         if (newYear > 1990 && newYear != year) {
-             doc.saveMonth(date.year(), date.month(), textFields);
-             date.setDate(newYear, date.month(), date.day());
+         if (newYear > 1900 && newYear < 2200 && newYear != year) {
+             saveCurrentMonth();
+             m_date.setDate(newYear, m_date.month(), m_date.day());
              updateCalendar();
          }
      }
 }
-

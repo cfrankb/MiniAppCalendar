@@ -1,10 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtDebug>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QPlainTextEdit>
-#include <QtWidgets/QLabel>
+#include <QMainWindow>
 #include <QDate>
 #include "document.h"
 
@@ -12,6 +9,9 @@ namespace Ui
 {
     class MainWindow;
 }
+
+class QLabel;
+class QPlainTextEdit;
 
 class MainWindow : public QMainWindow
 {
@@ -27,17 +27,17 @@ private:
     enum { MaxRecentFiles = 4 };
 
     Ui::MainWindow *ui;
-    QDate date;
-    QPlainTextEdit **textFields;
-    QLabel **labelDays;
-    QLabel **labelNumbers;
-    QAction *recentFileActs[MaxRecentFiles];
-    QAction *separatorAct[1];
+    QDate m_date;
+    QPlainTextEdit **m_textFields;
+    QLabel **m_labelDays;
+    QLabel **m_labelNumbers;
+    QAction *m_recentFileActs[MaxRecentFiles];
+    QAction *m_separatorAct[1];
     const char *colorDate(int day_count, QString &text);
     const char *applyRules(const QString &text);
 
-    Document doc;
-    bool ready;
+    Document m_doc;
+    bool m_ready;
 
     bool highlightToggle;
     bool greyOutPastToggle;
@@ -90,6 +90,9 @@ private slots:
     void colorTextbox();
     void on_actionApply_rules_toggled(bool arg1);
     void on_actionMonth_Go_to_year_triggered();
+
+private:
+    void saveCurrentMonth();
 };
 
 #endif // MAINWINDOW_H

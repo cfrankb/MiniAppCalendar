@@ -2,11 +2,10 @@
 #define MEMODIALOG_H
 
 #include <QDialog>
-#include <QPushButton>
-#include <QTextEdit>
-#include <QGridLayout>
-#include <QResizeEvent>
-#include <QtDebug>
+
+class QPlainTextEdit;
+class QPushButton;
+class QResizeEvent;
 
 class MemoDialog : public QDialog
 {
@@ -15,7 +14,7 @@ class MemoDialog : public QDialog
 
 public:
     MemoDialog(QWidget *parent=NULL);
-    QTextEdit *memoText;
+    QPlainTextEdit *memoText;
 
 private:
     QPushButton *okButton;

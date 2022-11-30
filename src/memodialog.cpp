@@ -1,11 +1,15 @@
 #include "memodialog.h"
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QGridLayout>
+#include <QResizeEvent>
 
 MemoDialog::MemoDialog(QWidget *parent)
     : QDialog(parent)
 {
     okButton = new QPushButton(tr("OK"));
     cancelButton = new QPushButton(tr("Cancel"));
-    memoText = new QTextEdit;
+    memoText = new QPlainTextEdit(this);
 
     QGridLayout *gLayout = new QGridLayout;
 
