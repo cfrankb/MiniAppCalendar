@@ -2,9 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QtDebug>
-//#include <QtGui/QMainWindow>
-//#include <QtGui/QPlainTextEdit>
-//#include <QtGui/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QLabel>
@@ -92,6 +89,7 @@ private slots:
 
     void colorTextbox();
     void on_actionApply_rules_toggled(bool arg1);
+    void on_actionMonth_Go_to_year_triggered();
 };
 
 #endif // MAINWINDOW_H

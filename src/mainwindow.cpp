@@ -4,6 +4,7 @@
 #include "memodialog.h"
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include "dlgabout.h"
 
 static char appName[] = "MiniApp Calendar";
@@ -240,7 +241,7 @@ void MainWindow::updateCalendar() {
             dd = x + y * 7;
             QString dayText = "";
             if (dd >= day && day_count <= monthSize) {
-                text = QString("   " + QString::number(day_count));
+                text = QString("   %1").arg(day_count);
                 day_count++;
                 textFields[dd]->setVisible(true);
                 if (monthIndex != -1) {
@@ -618,3 +619,22 @@ void MainWindow::restoreSettings()
     greyOutPastToggle = settings.value("visual/grey_out_past_toggle").value<bool>();
     applyRulesToggle = settings.value("visual/apply_rules_toggle").value<bool>();
 }
+
+void MainWindow::on_actionMonth_Go_to_year_triggered()
+{
+    int year = date.year();
+    bool ok;
+     QString text = QInputDialog::getText(this, tr("Go to Year"),
+                                          tr("Year:"), QLineEdit::Normal,
+                                          QString("%1").arg(year), &ok);
+
+     if (ok && !text.isEmpty()){
+         int newYear = text.toInt();
+         if (newYear > 1990 && newYear != year) {
+             doc.saveMonth(date.year(), date.month(), textFields);
+             date.setDate(newYear, date.month(), date.day());
+             updateCalendar();
+         }
+     }
+}
+

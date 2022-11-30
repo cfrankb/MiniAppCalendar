@@ -57,6 +57,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionPrevious"/>
     <addaction name="actionNext"/>
     <addaction name="actionCurrent"/>
+    <addaction name="actionMonth_Go_to_year"/>
     <addaction name="separator"/>
     <addaction name="actionMemo"/>
    </widget>
@@ -251,6 +252,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Apply rules</string>
+   </property>
+  </action>
+  <action name="actionMonth_Go_to_year">
+   <property name="text">
+    <string>Go to year</string>
    </property>
   </action>
  </widget>

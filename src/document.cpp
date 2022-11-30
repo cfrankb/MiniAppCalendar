@@ -1,11 +1,11 @@
 #include "document.h"
 #include <QString>
 
-static QString signature = "MiniApp Calendar v1.0";
+QString signature = "MiniApp Calendar v1.0";
 
 Document::Document()
 {
-    lastError = ERR_NONE;
+    m_lastError = ERR_NONE;
     init();
 }
 
@@ -16,35 +16,35 @@ Document::~Document()
 
 void Document::forget()
 {
-    delete [] dailyText;
-    delete [] months;
-    delete [] years;
-    delete [] memos;
+    delete [] m_dailyText;
+    delete [] m_months;
+    delete [] m_years;
+    delete [] m_memos;
 }
 
 void Document::empty()
 {
-    totalMonths = 0;
-    fileName = "";
-    dirty = false;
+    m_totalMonths = 0;
+    m_fileName = "";
+    m_dirty = false;
 }
 
 void Document::init()
 {
-    totalMonths = 0;
-    maxMonths = 100;
-    fileName = "";
-    dirty = false;
+    m_totalMonths = 0;
+    m_maxMonths = 100;
+    m_fileName = "";
+    m_dirty = false;
 
-    dailyText = new Month[static_cast<unsigned int>(maxMonths)];
-    months = new int[static_cast<unsigned int>(maxMonths)];
-    years = new int[static_cast<unsigned int>(maxMonths)];
-    memos = new QString[static_cast<unsigned int>(maxMonths)];
+    m_dailyText = new Month[static_cast<unsigned int>(m_maxMonths)];
+    m_months = new int[static_cast<unsigned int>(m_maxMonths)];
+    m_years = new int[static_cast<unsigned int>(m_maxMonths)];
+    m_memos = new QString[static_cast<unsigned int>(m_maxMonths)];
 }
 
 int Document::findMonth(int year, int month) {
-    for (int i=0; i < totalMonths; i++)
-        if (months[i] == month && years[i] == year)
+    for (int i=0; i < m_totalMonths; i++)
+        if (m_months[i] == month && m_years[i] == year)
             return i;
     return -1;
 }
@@ -52,7 +52,7 @@ int Document::findMonth(int year, int month) {
 QString Document::getMemo(int year, int month) {
     int indexMonth = findMonth(year, month);
     if (indexMonth != -1) {
-        return memos[indexMonth];
+        return m_memos[indexMonth];
     }
     else {
         return "";
@@ -62,46 +62,46 @@ QString Document::getMemo(int year, int month) {
 void Document::setMemo(int year, int month, QString memo) {
     int indexMonth = findMonth(year, month);
     if (indexMonth != -1) {
-        memos[indexMonth] = memo;
+        m_memos[indexMonth] = memo;
     }
     else {
-        memos[totalMonths] = memo;
-        years[totalMonths] = year;
-        months[totalMonths] = month;
-        totalMonths ++;
+        m_memos[m_totalMonths] = memo;
+        m_years[m_totalMonths] = year;
+        m_months[m_totalMonths] = month;
+        m_totalMonths ++;
 
-        if (totalMonths == maxMonths) {
-            resize(maxMonths + 100);
+        if (m_totalMonths == m_maxMonths) {
+            resize(m_maxMonths + 100);
         }
     }
 }
 
 QString Document::getDailyText(int monthIndex, int day) {
-    return dailyText[monthIndex][day];
+    return m_dailyText[monthIndex][day];
 }
 
 void Document::resize(int size) {
 
-    maxMonths = qMax(size, maxMonths);
+    m_maxMonths = qMax(size, m_maxMonths);
 
-    Month *dailyText2 = new Month[maxMonths];
-    int *months2 = new int[maxMonths];
-    int *years2 = new int[maxMonths];
-    QString *memos2 = new QString[maxMonths];
+    Month *dailyText2 = new Month[m_maxMonths];
+    int *months2 = new int[m_maxMonths];
+    int *years2 = new int[m_maxMonths];
+    QString *memos2 = new QString[m_maxMonths];
 
-    for (int i=0; i < totalMonths; i++) {
-        dailyText2[i] = dailyText[i];
-        months2[i] = months[i];
-        years2[i] = years[i];
-        memos2[i] = memos[i];
+    for (int i=0; i < m_totalMonths; i++) {
+        dailyText2[i] = m_dailyText[i];
+        months2[i] = m_months[i];
+        years2[i] = m_years[i];
+        memos2[i] = m_memos[i];
     }
 
     forget();
 
-    dailyText = dailyText2;
-    months = months2;
-    years = years2;
-    memos = memos2;
+    m_dailyText = dailyText2;
+    m_months = months2;
+    m_years = years2;
+    m_memos = memos2;
 }
 
 void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
@@ -110,9 +110,9 @@ void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
     bool original = monthIndex == -1;
 
     if (original) {
-        monthIndex = totalMonths;
-        months[totalMonths] = month;
-        years[totalMonths] = year;
+        monthIndex = m_totalMonths;
+        m_months[m_totalMonths] = month;
+        m_years[m_totalMonths] = year;
     }
 
     bool hasContent = false;
@@ -130,45 +130,45 @@ void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
         str = restoreCR(str);
 
         if (!textFields[day]->isHidden() && ((original && (str != ""))
-            ||  (!original && (dailyText[monthIndex][day] != str)))) {
+            ||  (!original && (m_dailyText[monthIndex][day] != str)))) {
             hasContent = true;
         }
 
-        dailyText[monthIndex][day] = str;
+        m_dailyText[monthIndex][day] = str;
     }
 
     if (original && hasContent) {
-        totalMonths ++;
-        if (totalMonths == maxMonths) {
-            resize(maxMonths + 100);
+        m_totalMonths ++;
+        if (m_totalMonths == m_maxMonths) {
+            resize(m_maxMonths + 100);
         }
     }
 
-    if (!dirty) {
-        dirty = hasContent;
+    if (!m_dirty) {
+        m_dirty = hasContent;
     }
 }
 
 bool Document::writeFile()
 {
-    QByteArray ba = fileName.toLocal8Bit();// fileName.toAscii();
+    QByteArray ba = m_fileName.toLocal8Bit();
     FILE *tfile = fopen(ba.constData(), "wb");
     if (!tfile) {
         qDebug() << "write error" << "\n";
-        lastError = ERR_WRITE;
+        m_lastError = ERR_WRITE;
         return false;
     }
 
     writeString(tfile, signature);
-    writeInt(tfile, totalMonths);
+    writeInt(tfile, m_totalMonths);
 
-    for (int i = 0; i < totalMonths; i++) {
-        writeInt(tfile, years[i]);
-        writeInt(tfile, months[i]);
-        writeString(tfile, memos[i]);
+    for (int i = 0; i < m_totalMonths; i++) {
+        writeInt(tfile, m_years[i]);
+        writeInt(tfile, m_months[i]);
+        writeString(tfile, m_memos[i]);
 
         for (int x = 0; x < 42; x++) {
-            writeString(tfile, dailyText[i][x]);
+            writeString(tfile, m_dailyText[i][x]);
         }
     }
 
@@ -179,37 +179,37 @@ bool Document::writeFile()
 
 bool Document::readFile()
 {
-    QByteArray ba = fileName.toLocal8Bit();// fileName.toAscii();
+    QByteArray ba = m_fileName.toLocal8Bit();
     FILE *sfile = fopen(ba.constData(), "rb");
     if (!sfile) {
         qDebug() << "read error" << "\n";
-        lastError = ERR_READ;
+        m_lastError = ERR_READ;
         return false;
     }
 
     QString str = readString(sfile);
     if (str != signature) {
         qDebug() << "wrong signature" << "\n";
-        lastError = ERR_SIGNATURE;
+        m_lastError = ERR_SIGNATURE;
         return false;
     }
 
     forget();
     int size = readInt(sfile);
-    totalMonths = 0;
-    maxMonths = size + 100;
-    dailyText = new Month[maxMonths];
-    months = new int[maxMonths];
-    years = new int[maxMonths];
-    memos = new QString[maxMonths];
+    m_totalMonths = 0;
+    m_maxMonths = size + 100;
+    m_dailyText = new Month[m_maxMonths];
+    m_months = new int[m_maxMonths];
+    m_years = new int[m_maxMonths];
+    m_memos = new QString[m_maxMonths];
     while (size != 0) {
-        years[totalMonths] = readInt(sfile);
-        months[totalMonths] = readInt(sfile);
-        memos[totalMonths] = readString(sfile);
+        m_years[m_totalMonths] = readInt(sfile);
+        m_months[m_totalMonths] = readInt(sfile);
+        m_memos[m_totalMonths] = readString(sfile);
         for (int x = 0; x < 42; x++) {
-            dailyText[totalMonths][x] = readString(sfile);
+            m_dailyText[m_totalMonths][x] = readString(sfile);
         }
-        totalMonths++;
+        m_totalMonths++;
         size--;
     }
     fclose(sfile);
@@ -259,7 +259,7 @@ void Document::writeInt(FILE *tfile, int v)
 
 int Document::getLastError() const
 {
-    return lastError;
+    return m_lastError;
 }
 
 QString Document::restoreCR(QString str)
@@ -275,4 +275,28 @@ QString Document::restoreCR(QString str)
         str = tmp;
     }
     return str;
+}
+
+int Document::getSize() {
+    return m_totalMonths;
+}
+
+QString Document::getFileName() {
+    return m_fileName;
+}
+
+void Document::setFileName(QString t) {
+    m_fileName = t;
+}
+
+bool Document::isDirty() {
+    return m_dirty;
+}
+
+bool Document::isUntitled() {
+    return m_fileName == "";
+}
+
+void Document::setDirty(bool b) {
+    m_dirty = b;
 }

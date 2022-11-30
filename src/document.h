@@ -5,7 +5,6 @@
 #include <QDate>
 #include <QByteArray>
 #include <QtCore/QVariant>
-//#include <QtGui/QPlainTextEdit>
 #include <QtWidgets/QPlainTextEdit>
 #include <stdio.h>
 #include "month.h"
@@ -17,12 +16,12 @@ public:
     ~Document();
 
     void empty();
-    int getSize() { return totalMonths; }
-    QString getFileName() { return fileName; }
-    void setFileName(QString t) { fileName = t; }
-    bool isDirty() { return dirty; }
-    bool isUntitled() { return fileName == ""; }
-    void setDirty(bool b) {  dirty = b; }
+    int getSize();
+    QString getFileName();
+    void setFileName(QString t);
+    bool isDirty();
+    bool isUntitled();
+    void setDirty(bool b);
 
     int findMonth(int year, int month);
     QString getMemo(int year, int month);
@@ -56,18 +55,17 @@ protected:
     void init();
     void forget();
 
-    QString fileName;
-    //QString lastError;
-    int lastError;
+    QString m_fileName;
+    int m_lastError;
 
-    Month *dailyText;
-    int *months;
-    int *years;
-    QString *memos;
+    Month *m_dailyText;
+    int *m_months;
+    int *m_years;
+    QString *m_memos;
 
-    int totalMonths;
-    int maxMonths;
-    bool dirty;
+    int m_totalMonths;
+    int m_maxMonths;
+    bool m_dirty;
 
 };
 
