@@ -1,5 +1,6 @@
 #include "document.h"
 #include <QString>
+#include <QPlainTextEdit>
 
 QString signature = "MiniApp Calendar v1.0";
 
@@ -17,9 +18,6 @@ Document::~Document()
 void Document::forget()
 {
     delete [] m_dailyText;
-    delete [] m_months;
-    delete [] m_years;
-    delete [] m_memos;
 }
 
 void Document::empty()
@@ -32,27 +30,26 @@ void Document::empty()
 void Document::init()
 {
     m_totalMonths = 0;
-    m_maxMonths = 100;
+    m_maxMonths = GROW_BY;
     m_fileName = "";
     m_dirty = false;
 
     m_dailyText = new Month[static_cast<unsigned int>(m_maxMonths)];
-    m_months = new int[static_cast<unsigned int>(m_maxMonths)];
-    m_years = new int[static_cast<unsigned int>(m_maxMonths)];
-    m_memos = new QString[static_cast<unsigned int>(m_maxMonths)];
 }
 
 int Document::findMonth(int year, int month) {
-    for (int i=0; i < m_totalMonths; i++)
-        if (m_months[i] == month && m_years[i] == year)
+    for (int i=0; i < m_totalMonths; i++) {
+        Month & curr = m_dailyText[i];
+        if (curr.month()  == month && curr.year() == year)
             return i;
-    return -1;
+    }
+    return NOT_FOUND;
 }
 
 QString Document::getMemo(int year, int month) {
-    int indexMonth = findMonth(year, month);
-    if (indexMonth != -1) {
-        return m_memos[indexMonth];
+    int i = findMonth(year, month);
+    if (i != NOT_FOUND) {
+        return m_dailyText[i].memo();
     }
     else {
         return "";
@@ -60,18 +57,18 @@ QString Document::getMemo(int year, int month) {
 }
 
 void Document::setMemo(int year, int month, QString memo) {
-    int indexMonth = findMonth(year, month);
-    if (indexMonth != -1) {
-        m_memos[indexMonth] = memo;
+    int i = findMonth(year, month);
+    if (i != NOT_FOUND) {
+        return m_dailyText[i].memo(memo);
     }
     else {
-        m_memos[m_totalMonths] = memo;
-        m_years[m_totalMonths] = year;
-        m_months[m_totalMonths] = month;
+        Month &curr = m_dailyText[m_totalMonths];
+        curr.memo(memo);
+        curr.year(year);
+        curr.month(month);
         m_totalMonths ++;
-
         if (m_totalMonths == m_maxMonths) {
-            resize(m_maxMonths + 100);
+            resize(m_maxMonths + GROW_BY);
         }
     }
 }
@@ -81,27 +78,13 @@ QString Document::getDailyText(int monthIndex, int day) {
 }
 
 void Document::resize(int size) {
-
     m_maxMonths = qMax(size, m_maxMonths);
-
-    Month *dailyText2 = new Month[m_maxMonths];
-    int *months2 = new int[m_maxMonths];
-    int *years2 = new int[m_maxMonths];
-    QString *memos2 = new QString[m_maxMonths];
-
+    Month *months = new Month[m_maxMonths];
     for (int i=0; i < m_totalMonths; i++) {
-        dailyText2[i] = m_dailyText[i];
-        months2[i] = m_months[i];
-        years2[i] = m_years[i];
-        memos2[i] = m_memos[i];
+        months[i] = m_dailyText[i];
     }
-
     forget();
-
-    m_dailyText = dailyText2;
-    m_months = months2;
-    m_years = years2;
-    m_memos = memos2;
+    m_dailyText = months;
 }
 
 void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
@@ -111,8 +94,9 @@ void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
 
     if (original) {
         monthIndex = m_totalMonths;
-        m_months[m_totalMonths] = month;
-        m_years[m_totalMonths] = year;
+        Month &curr = m_dailyText[m_totalMonths];
+        curr.month(month);
+        curr.year(year);
     }
 
     bool hasContent = false;
@@ -140,7 +124,7 @@ void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
     if (original && hasContent) {
         m_totalMonths ++;
         if (m_totalMonths == m_maxMonths) {
-            resize(m_maxMonths + 100);
+            resize(m_maxMonths + GROW_BY);
         }
     }
 
@@ -163,10 +147,10 @@ bool Document::writeFile()
     writeInt(tfile, m_totalMonths);
 
     for (int i = 0; i < m_totalMonths; i++) {
-        writeInt(tfile, m_years[i]);
-        writeInt(tfile, m_months[i]);
-        writeString(tfile, m_memos[i]);
-
+        Month &curr = m_dailyText[i];
+        writeInt(tfile, curr.year());
+        writeInt(tfile, curr.month());
+        writeString(tfile, curr.memo());
         for (int x = 0; x < 42; x++) {
             writeString(tfile, m_dailyText[i][x]);
         }
@@ -197,15 +181,13 @@ bool Document::readFile()
     forget();
     int size = readInt(sfile);
     m_totalMonths = 0;
-    m_maxMonths = size + 100;
+    m_maxMonths = size + GROW_BY;
     m_dailyText = new Month[m_maxMonths];
-    m_months = new int[m_maxMonths];
-    m_years = new int[m_maxMonths];
-    m_memos = new QString[m_maxMonths];
     while (size != 0) {
-        m_years[m_totalMonths] = readInt(sfile);
-        m_months[m_totalMonths] = readInt(sfile);
-        m_memos[m_totalMonths] = readString(sfile);
+        Month &curr = m_dailyText[m_totalMonths];
+        curr.year(readInt(sfile));
+        curr.month(readInt(sfile));
+        curr.memo(readString(sfile));
         for (int x = 0; x < 42; x++) {
             m_dailyText[m_totalMonths][x] = readString(sfile);
         }

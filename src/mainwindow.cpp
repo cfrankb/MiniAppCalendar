@@ -383,7 +383,6 @@ QString MainWindow::getErrorMessage(int msg) const
         tr("write error"),
         tr("wrong signature")
     };
-
     return msgs[msg];
 }
 
@@ -393,14 +392,12 @@ bool MainWindow::open(QString fileName)
         if (fileName.isEmpty()) {
             fileName = QFileDialog::getOpenFileName(this, "", fileName, tr(fileFilter));
         }
-
         if (!fileName.isEmpty()) {
             QString oldFileName = doc.getFileName();
             doc.setFileName(fileName);
             if (!doc.readFile())  {
                 warningMessage(tr("cannot open file: %1").arg(doc.getLastError()));
                 doc.setFileName(oldFileName);
-
                 // update fileList
                 QSettings settings(author, appName);
                 QStringList files = settings.value("recentFileList").toStringList();
@@ -413,7 +410,6 @@ bool MainWindow::open(QString fileName)
             updateCalendar();
         }
     }
-
     return true;
 }
 
@@ -470,7 +466,7 @@ bool MainWindow::updateTitle()
     }
 
     doc.setDirty(false);
-    setWindowTitle(tr("%1[*] - %2").arg( file  )  .arg(tr(appName)));
+    setWindowTitle(tr("%1[*] - %2").arg(file, appName));
 
     // update fileList
 

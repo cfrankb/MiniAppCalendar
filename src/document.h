@@ -4,10 +4,11 @@
 #include <QtDebug>
 #include <QDate>
 #include <QByteArray>
-#include <QtCore/QVariant>
-#include <QtWidgets/QPlainTextEdit>
+#include <QString>
 #include <stdio.h>
 #include "month.h"
+
+class QPlainTextEdit;
 
 class Document
 {
@@ -48,7 +49,10 @@ public:
         ERR_NONE=0,
         ERR_READ=1,
         ERR_WRITE=2,
-        ERR_SIGNATURE=3};
+        ERR_SIGNATURE=3,
+        GROW_BY= 100,
+        NOT_FOUND = -1
+    };
 
 protected:
 
@@ -57,12 +61,7 @@ protected:
 
     QString m_fileName;
     int m_lastError;
-
     Month *m_dailyText;
-    int *m_months;
-    int *m_years;
-    QString *m_memos;
-
     int m_totalMonths;
     int m_maxMonths;
     bool m_dirty;
