@@ -8,6 +8,10 @@ class Month
 public:
     Month();
 
+    enum {
+        MAX_DAYS = 42
+    };
+
     QString & operator [] (int i);
     void setText(int i, QString s);
 
@@ -21,7 +25,7 @@ public:
 protected:
     int m_month;
     int m_year;
-    QString m_dailyText[42];
+    QString m_dailyText[MAX_DAYS];
     QString m_memo;
 };
 

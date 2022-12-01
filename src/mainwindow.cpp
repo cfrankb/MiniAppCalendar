@@ -42,10 +42,6 @@ MainWindow::~MainWindow()
 
 const char *MainWindow::applyRules(const QString &text)
 {
-#define CONTAINS 0
-#define STARTSWITH 1
-#define ENDSWITH 2
-
     typedef struct {
         long op;
         const char *pattern;
@@ -53,21 +49,21 @@ const char *MainWindow::applyRules(const QString &text)
     } RULE;
 
     RULE rules[] = {
-        {CONTAINS, "PTO", "QPlainTextEdit {background-color: yellow;}"},
-        {CONTAINS, "VACATIONS", "QPlainTextEdit {background-color: pink;}"},
-        {STARTSWITH, "***", "QPlainTextEdit {background-color: orange;}"},
-        {CONTAINS, "STATS HOLIDAY", "QPlainTextEdit {background-color: lime;}"},
-        {STARTSWITH, "@@@", "QPlainTextEdit {background-color: gray;}"},
-        {STARTSWITH, "$$$", "QPlainTextEdit {background-color: green;}"},
+        {RULE_CONTAINS, "PTO", "QPlainTextEdit {background-color: yellow;}"},
+        {RULE_CONTAINS, "VACATIONS", "QPlainTextEdit {background-color: pink;}"},
+        {RULE_STARTSWITH, "***", "QPlainTextEdit {background-color: orange;}"},
+        {RULE_CONTAINS, "STATS HOLIDAY", "QPlainTextEdit {background-color: lime;}"},
+        {RULE_STARTSWITH, "@@@", "QPlainTextEdit {background-color: gray;}"},
+        {RULE_STARTSWITH, "$$$", "QPlainTextEdit {background-color: green;}"},
     };
 
     for (unsigned int i=0; i < sizeof(rules)/sizeof(RULE); ++i) {
         RULE & rule = rules[i];
-        if (rule.op == CONTAINS && text.contains(rule.pattern))  {
+        if (rule.op == RULE_CONTAINS && text.contains(rule.pattern))  {
             return rule.color;
-        } else if (rule.op == STARTSWITH && text.startsWith(rule.pattern))  {
+        } else if (rule.op == RULE_STARTSWITH && text.startsWith(rule.pattern))  {
             return rule.color;
-        } else if (rule.op == ENDSWITH && text.endsWith(rule.pattern))  {
+        } else if (rule.op == RULE_ENDSWITH && text.endsWith(rule.pattern))  {
             return rule.color;
         }
     }
@@ -109,11 +105,11 @@ void MainWindow::initCalendar()
 
     m_date = QDate::currentDate();
     m_date.setDate(m_date.year(), m_date.month(), 1);
-    int day = m_date.dayOfWeek() % 7 ;
+    int day = m_date.dayOfWeek() % DAYS_PER_WEEK;
 
-    m_textFields =  new QPlainTextEdit * [42];
-    m_labelDays = new QLabel * [7];
-    m_labelNumbers = new QLabel * [42];
+    m_textFields =  new QPlainTextEdit * [Month::MAX_DAYS];
+    m_labelDays = new QLabel * [DAYS_PER_WEEK];
+    m_labelNumbers = new QLabel * [Month::MAX_DAYS];
 
     QString text = QString("%1 %2").arg(getMonthName(m_date.month())).arg(m_date.year());
     ui->labelMonth->setText(text);
@@ -133,8 +129,8 @@ void MainWindow::initCalendar()
 #endif
 
     for (y = 0; y < 6; y++) {
-        for (x = 0; x < 7; x++) {
-            dd = x + y * 7;
+        for (x = 0; x < DAYS_PER_WEEK; x++) {
+            dd = x + y * DAYS_PER_WEEK;
             m_textFields[dd] =  new QPlainTextEdit(ui->centralWidget);
             m_textFields[dd]->setObjectName(QString::fromUtf8("textFields") + QString::number(dd));
             m_textFields[dd]->setGeometry(QRect(baseX + (len + space) * x, baseY + y * (hei + space), len, hei));
@@ -173,7 +169,7 @@ void MainWindow::initCalendar()
         tr("Saturday")
     };
 
-    for (x = 0; x < 7; x++) {
+    for (x = 0; x < DAYS_PER_WEEK; x++) {
         m_labelDays[x] = new QLabel(ui->centralWidget);
         m_labelDays[x]->setObjectName(QString::fromUtf8("labelDay") + QString::number(x));
         m_labelDays[x]->setGeometry(QRect(baseX + (len + space) * x, baseY - space, 32, 10));
@@ -232,15 +228,15 @@ void MainWindow::updateCalendar() {
     QString text = QString("%1 %2").arg(getMonthName(m_date.month())).arg(m_date.year());
     ui->labelMonth->setText(text);
 
-    int day = m_date.dayOfWeek() % 7;
+    int day = m_date.dayOfWeek() % DAYS_PER_WEEK;
     int x, y, dd;
     int day_count = 1;
     int monthSize = getMonthSize(m_date.year(), m_date.month());
     int monthIndex = m_doc.findMonth(m_date.year(), m_date.month());
 
     for (y = 0; y < 6; y++) {
-        for (x = 0; x < 7; x++) {
-            dd = x + y * 7;
+        for (x = 0; x < DAYS_PER_WEEK; x++) {
+            dd = x + y * DAYS_PER_WEEK;
             QString dayText = "";
             if (dd >= day && day_count <= monthSize) {
                 text = QString("   %1").arg(day_count);
@@ -277,8 +273,8 @@ void MainWindow::resizeControls(int width, int height) {
     int len = -spaceX + (width - baseX) / 7;
 
     for (int y = 0; y < 6; y ++) {
-        for (int x = 0; x < 7; x ++) {
-            int dd = x + y * 7;
+        for (int x = 0; x < DAYS_PER_WEEK; x ++) {
+            int dd = x + y * DAYS_PER_WEEK;
             m_textFields[dd]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY + y * (hei + spaceY), len, hei));
             m_labelNumbers[dd]->setGeometry(QRect(baseX + (len + spaceX) * x + len - 32, baseY + y * (hei + spaceY) - spaceY, 32, 10));
         }
@@ -524,7 +520,6 @@ void MainWindow::initFileMenu()
 
     connect(ui->actionClose, SIGNAL(triggered()), this, SLOT(close()));
     ui->actionClose->setMenuRole(QAction::QuitRole);
-
     ui->menu_File->addAction(ui->actionClose);
 }
 
@@ -621,16 +616,22 @@ void MainWindow::on_actionMonth_Go_to_year_triggered()
 {
     int year = m_date.year();
     bool ok;
-     QString text = QInputDialog::getText(this, tr("Go to Year"),
-                                          tr("Year:"), QLineEdit::Normal,
-                                          QString("%1").arg(year), &ok);
-
-     if (ok && !text.isEmpty()){
-         int newYear = text.toInt();
-         if (newYear > 1900 && newYear < 2200 && newYear != year) {
-             saveCurrentMonth();
-             m_date.setDate(newYear, m_date.month(), m_date.day());
-             updateCalendar();
-         }
+    QString text =
+        QInputDialog::getText(this, tr("Go to Year"), tr("Year:"),
+                              QLineEdit::Normal, QString("%1").arg(year), &ok);
+    enum { MIN_YEAR = 1900, MAX_YEAR = 2200 };
+    if (ok && !text.isEmpty()) {
+      int newYear = text.toInt();
+      if (newYear == year) {
+        return;
+      }
+      if (newYear > MIN_YEAR && newYear <= MAX_YEAR) {
+        saveCurrentMonth();
+        m_date.setDate(newYear, m_date.month(), m_date.day());
+        updateCalendar();
+      } else {
+        warningMessage(
+            tr("Year must be between %1 and %2.").arg(MIN_YEAR).arg(MAX_YEAR));
+      }
      }
 }

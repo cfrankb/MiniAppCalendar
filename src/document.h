@@ -1,9 +1,6 @@
 #ifndef DOCUMENT_H
 #define DOCUMENT_H
 
-#include <QtDebug>
-#include <QDate>
-#include <QByteArray>
 #include <QString>
 #include <stdio.h>
 #include "month.h"

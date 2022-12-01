@@ -24,7 +24,13 @@ public:
     void setDocument( const QString& fileName );
 
 private:
-    enum { MaxRecentFiles = 4 };
+    enum {
+        MaxRecentFiles = 4,
+        DAYS_PER_WEEK = 7,
+        RULE_CONTAINS = 0,
+        RULE_STARTSWITH = 1,
+        RULE_ENDSWITH = 2
+    };
 
     Ui::MainWindow *ui;
     QDate m_date;

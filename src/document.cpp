@@ -1,6 +1,8 @@
 #include "document.h"
 #include <QString>
 #include <QPlainTextEdit>
+#include <QtDebug>
+
 
 QString signature = "MiniApp Calendar v1.0";
 
@@ -151,7 +153,7 @@ bool Document::writeFile()
         writeInt(tfile, curr.year());
         writeInt(tfile, curr.month());
         writeString(tfile, curr.memo());
-        for (int x = 0; x < 42; x++) {
+        for (int x = 0; x < Month::MAX_DAYS; x++) {
             writeString(tfile, m_dailyText[i][x]);
         }
     }
@@ -188,7 +190,7 @@ bool Document::readFile()
         curr.year(readInt(sfile));
         curr.month(readInt(sfile));
         curr.memo(readString(sfile));
-        for (int x = 0; x < 42; x++) {
+        for (int x = 0; x < Month::MAX_DAYS; x++) {
             m_dailyText[m_totalMonths][x] = readString(sfile);
         }
         m_totalMonths++;
