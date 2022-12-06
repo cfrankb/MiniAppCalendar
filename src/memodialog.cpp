@@ -1,8 +1,7 @@
 #include "memodialog.h"
-#include <QPlainTextEdit>
-#include <QPushButton>
-#include <QGridLayout>
-#include <QResizeEvent>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QGridLayout>
 
 MemoDialog::MemoDialog(QWidget *parent)
     : QDialog(parent)

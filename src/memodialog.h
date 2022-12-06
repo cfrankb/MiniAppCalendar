@@ -1,7 +1,7 @@
 #ifndef MEMODIALOG_H
 #define MEMODIALOG_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 class QPlainTextEdit;
 class QPushButton;

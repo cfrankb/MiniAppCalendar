@@ -1,12 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QtGui>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QLabel>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QLabel>
 #include <QtDebug>
-#include <QPlainTextEdit>
+#include <QtWidgets/QPlainTextEdit>
+#include <QSettings>
 #include "dlgabout.h"
 #include "memodialog.h"
 

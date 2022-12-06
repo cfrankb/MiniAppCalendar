@@ -1,6 +1,6 @@
 #include "document.h"
 #include <QString>
-#include <QPlainTextEdit>
+#include <QtWidgets/QPlainTextEdit>
 #include <QtDebug>
 
 
