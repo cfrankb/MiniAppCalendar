@@ -37,7 +37,7 @@ public:
     int getLastError() const;
 
     static void writeString(FILE *, QString);
-    static QString readString(FILE *);
+    static char *readString(FILE *);
     static void writeInt(FILE *, int);
     static int readInt(FILE *);
     static QString restoreCR(QString str);

@@ -189,9 +189,13 @@ bool Document::readFile()
         Month &curr = m_dailyText[m_totalMonths];
         curr.year(readInt(sfile));
         curr.month(readInt(sfile));
-        curr.memo(readString(sfile));
+        char *t = readString(sfile);
+        curr.memo(t);
+        delete []t;
         for (int x = 0; x < Month::MAX_DAYS; x++) {
-            m_dailyText[m_totalMonths][x] = readString(sfile);
+            char *t = readString(sfile);
+            m_dailyText[m_totalMonths][x] = t;
+            delete []t;
         }
         m_totalMonths++;
         size--;
@@ -215,18 +219,18 @@ void Document::writeString(FILE *tfile, QString str)
     fwrite(ba.constData(), size, 1, tfile);
 }
 
-QString Document::readString(FILE *sfile)
+char * Document::readString(FILE *sfile)
 {
-    unsigned int size = 0;
+    unsigned long size = 0;
     fread(&size, 1, 1, sfile);
     //TODO: implement full 32bits
     if (size == 255) {
         fread(&size, 2, 1, sfile);
     }
-    char buf[size + 1];
+    char *buf = new char[size + 1];
     buf[size] = 0;
     fread(buf, size, 1, sfile);
-    return QString(buf);
+    return buf;
 }
 
 int Document::readInt(FILE *sfile)
