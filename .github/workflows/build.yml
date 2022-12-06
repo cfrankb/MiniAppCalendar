@@ -29,7 +29,7 @@ jobs:
     steps:
 
       - name: checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: (2) Get all tags for correct version determination
         working-directory:  ${{ github.workspace }}
@@ -37,7 +37,7 @@ jobs:
           git fetch --all --tags -f
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
           version:      ${{ env.QT_VERSION }}
           host:         windows
@@ -80,17 +80,20 @@ jobs:
               copy C:\Windows\System32\vcruntime140.dll .
               del *.obj
               del *.cpp
+              del *.h
+              del *.res
               
-      - name: Zip build
-        working-directory: ${{ runner.temp }}
-        run:  |
-              cd build\release
-              7z a MiniAppCalendar.zip -stxzip * -r
-              move MiniAppCalendar.zip ..\..
+      #- name: Zip build
+      #  working-directory: ${{ runner.temp }}
+      #  run:  |
+      #        cd build\release
+      #        7z a MiniAppCalendar.zip -stxzip * -r
+      #        move MiniAppCalendar.zip ..\..
               
       - name: Save build artifact
         uses: actions/upload-artifact@master
         with:
           name: ${{ env.ARTIFACT }}
-          path: ${{ runner.temp }}\${{ env.ARTIFACT }}
+          #path: ${{ runner.temp }}\${{ env.ARTIFACT }}
+          path: ${{ runner.temp }}\build\release
 
