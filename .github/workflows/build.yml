@@ -17,10 +17,13 @@ defaults:
     shell: cmd
 
 env:
-  BUILD_TYPE: Release
+  BUILD_TYPE:   Release
   SOURCE_DIR:   ${{ github.workspace }}
   QT_VERSION:   5.15.2
-  ARTIFACT:     MiniAppCalendar.zip  
+  ARTIFACT:     MiniAppCalendar.zip
+  ARCH:         win64_msvc2019_64
+  HOST:         windows
+  VSARCH:       x64
 
 jobs:
   build:
@@ -40,9 +43,9 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version:      ${{ env.QT_VERSION }}
-          host:         windows
+          host:         ${{ env.HOST }}
           target:       desktop
-          arch:         win64_msvc2019_64
+          arch:         ${{ env.ARCH }}
           dir:          ${{ runner.temp }}
           modules:      qtcore qtwidgets qtgui   #qtcharts qt3d
           setup-python: false
@@ -64,7 +67,7 @@ jobs:
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
-          arch: x64
+          arch: ${{ env.VSARCH }}
 
       - name: Build
         working-directory: ${{ runner.temp }}\build
