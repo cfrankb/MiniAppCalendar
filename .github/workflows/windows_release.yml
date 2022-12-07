@@ -1,4 +1,4 @@
-name: Build
+name: Windows Release
 
 on:
   push:
@@ -20,7 +20,7 @@ env:
   BUILD_TYPE:   Release
   SOURCE_DIR:   ${{ github.workspace }}
   QT_VERSION:   5.15.2
-  ARTIFACT:     MiniAppCalendar.zip
+  ARTIFACT:     MiniAppCalendar_Win64
   ARCH:         win64_msvc2019_64
   HOST:         windows
   VSARCH:       x64
