@@ -20,7 +20,7 @@ defaults:
 env:
   SOURCE_DIR: ${{ github.workspace }}
   QT_VERSION: 5.15.2
-  ARTIFACT: qt-planets-linux-build.AppImage
+  ARTIFACT: 'MiniAppCalendar-x86_64.AppImage'
 
 jobs:
   build:
@@ -58,12 +58,16 @@ jobs:
           wget -O deploy.AppImage https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x deploy.AppImage
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ github.workspace }}/Qt/5.15.2/gcc_64/lib/
+          ls ${{ env.SOURCE_DIR }}
           cp ${{ env.SOURCE_DIR }}/linux/* .
-          ./deploy.AppImage planets-qml.desktop -appimage -no-translations -qmldir=${{ env.SOURCE_DIR }} -extra-plugins=renderers
-          mv *.AppImage ${{ env.ARTIFACT }}
+          ./deploy.AppImage MiniAppCalendar.desktop -appimage -no-translations -qmldir=${{ env.SOURCE_DIR }} -extra-plugins=renderers
+          ls -l
+          mkdir ${{ env.SOURCE_DIR }}/build/release
+          ls -l
+          mv *.AppImage ${{ env.SOURCE_DIR }}/build/release
 
       - name: Linux artefact
         uses: actions/upload-artifact@v1
         with:
           name: ${{ env.ARTIFACT }}
-          path: ${{ env.SOURCE_DIR }}/build/${{ env.ARTIFACT }}
+          path: ${{ env.SOURCE_DIR }}/build/release
