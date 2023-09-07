@@ -40,18 +40,18 @@ jobs:
           git fetch --all --tags -f
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
           version:      ${{ env.QT_VERSION }}
           host:         ${{ env.HOST }}
           target:       desktop
           arch:         ${{ env.ARCH }}
           dir:          ${{ runner.temp }}
-          modules:      qtcore qtwidgets qtgui   #qtcharts qt3d
+          #modules:     qtcharts qt3d
           setup-python: false
 
       - name: Download JOM
-        uses: suisei-cn/actions-download-file@v1
+        uses: suisei-cn/actions-download-file@v1.4.0
         with:
           url:    http://download.qt.io/official_releases/jom/jom.zip
           target: ${{ runner.temp }}\
@@ -85,14 +85,7 @@ jobs:
               del *.cpp
               del *.h
               del *.res
-              
-      #- name: Zip build
-      #  working-directory: ${{ runner.temp }}
-      #  run:  |
-      #        cd build\release
-      #        7z a MiniAppCalendar.zip -stxzip * -r
-      #        move MiniAppCalendar.zip ..\..
-              
+                          
       - name: Save build artifact
         uses: actions/upload-artifact@master
         with:

@@ -282,7 +282,7 @@ bool Document::isDirty() {
 }
 
 bool Document::isUntitled() {
-    return m_fileName == "";
+    return m_fileName.isEmpty();
 }
 
 void Document::setDirty(bool b) {

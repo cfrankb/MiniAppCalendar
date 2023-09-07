@@ -50,10 +50,11 @@ const char *MainWindow::applyRules(const QString &text)
 
     RULE rules[] = {
         {RULE_CONTAINS, "PTO", "QPlainTextEdit {background-color: yellow;}"},
+        {RULE_CONTAINS, "SICK", "QPlainTextEdit {background-color: #DDFF80;}"},
         {RULE_CONTAINS, "VACATIONS", "QPlainTextEdit {background-color: pink;}"},
-        {RULE_STARTSWITH, "***", "QPlainTextEdit {background-color: orange;}"},
         {RULE_CONTAINS, "STATS HOLIDAY", "QPlainTextEdit {background-color: lime;}"},
-        {RULE_STARTSWITH, "@@@", "QPlainTextEdit {background-color: gray;}"},
+        {RULE_STARTSWITH, "***", "QPlainTextEdit {background-color: orange;}"},
+        {RULE_STARTSWITH, "@@@", "QPlainTextEdit {background-color: #80A0FF;}"},
         {RULE_STARTSWITH, "$$$", "QPlainTextEdit {background-color: green;}"},
     };
 
