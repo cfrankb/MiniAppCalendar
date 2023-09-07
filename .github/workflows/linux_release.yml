@@ -64,7 +64,7 @@ jobs:
           ls -l
           mkdir ${{ env.SOURCE_DIR }}/build/release
           ls -l
-          mv *.AppImage ${{ env.SOURCE_DIR }}/build/release
+          mv MiniAppCalendar*.AppImage ${{ env.SOURCE_DIR }}/build/release
 
       - name: Linux artefact
         uses: actions/upload-artifact@v1
