@@ -61,7 +61,10 @@ jobs:
           7z x jom.zip -ojom
 
       - name: Create build directory
-        run: mkdir ${{ runner.temp }}\build
+        run: |
+          mkdir ${{ runner.temp }}\build
+          mkdir ${{ env.SOURCE_DIR }}\build
+          mkdir ${{ env.SOURCE_DIR }}\build\release
 
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
@@ -88,7 +91,8 @@ jobs:
       - name: Compress to zip file
         working-directory: ${{ runner.temp }}\build\release
         run: |
-          7z a ${{ runner.temp }}\build\${{ env.ARTIFACT }}.zip *
+          7z a ${{ env.SOURCE_DIR }}\build\release\${{ env.ARTIFACT }}.zip *
+          dir /s ${{ env.SOURCE_DIR }}\build\release
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -96,7 +100,8 @@ jobs:
         with:
           files: |
             LICENSE
-            ${{ runner.temp }}\build\${{ env.ARTIFACT }}.zip
+            README.md
+            ${{ env.SOURCE_DIR }}\build\release\${{ env.ARTIFACT }}.zip
 
       - name: Save build artifact
         uses: actions/upload-artifact@master
