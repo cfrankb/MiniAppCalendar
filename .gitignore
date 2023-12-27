@@ -9,3 +9,4 @@ src/ui_*.h
 src/MiniAppCalendar
 .qtc_clangd/
 *.o
+.vscode/

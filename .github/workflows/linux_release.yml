@@ -3,15 +3,15 @@ name: Linux Release
 on:
   push:
     branches:
-      - 'master'
-      - 'continuous-integration'
-      - 'cross-platform'
+      - "master"
+      - "continuous-integration"
+      - "cross-platform"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
-      - 'master'
-      - 'continuous-integration'
+      - "master"
+      - "continuous-integration"
 
 defaults:
   run:
@@ -20,7 +20,7 @@ defaults:
 env:
   SOURCE_DIR: ${{ github.workspace }}
   QT_VERSION: 5.15.2
-  ARTIFACT: 'MiniAppCalendar-x86_64.AppImage'
+  ARTIFACT: "MiniAppCalendar-x86_64.AppImage"
 
 jobs:
   build:
@@ -55,6 +55,8 @@ jobs:
       - name: AppImage
         working-directory: ${{ env.SOURCE_DIR }}/build
         run: |
+          sudo apt update -y
+          sudo apt install zip
           wget -O deploy.AppImage https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x deploy.AppImage
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ github.workspace }}/Qt/5.15.2/gcc_64/lib/
@@ -65,6 +67,14 @@ jobs:
           mkdir ${{ env.SOURCE_DIR }}/build/release
           ls -l
           mv MiniAppCalendar*.AppImage ${{ env.SOURCE_DIR }}/build/release
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            LICENSE
+            ${{ env.SOURCE_DIR }}/build/release/*.AppImage
 
       - name: Linux artefact
         uses: actions/upload-artifact@v1
