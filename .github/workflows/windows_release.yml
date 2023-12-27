@@ -84,7 +84,6 @@ jobs:
           del *.cpp
           del *.h
           del *.res
-          # ${{ github.ref_name }}.zip
 
       - name: Compress to zip file
         working-directory: ${{ runner.temp }}\build\release
