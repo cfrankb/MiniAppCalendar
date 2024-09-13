@@ -8,12 +8,14 @@ SOURCES += main.cpp \
     document.cpp \
     month.cpp \
     memodialog.cpp \
-    dlgabout.cpp
+    dlgabout.cpp \
+    textedit.cpp
 HEADERS += mainwindow.h \
     document.h \
     month.h \
     memodialog.h \
-    dlgabout.h
+    dlgabout.h \
+    textedit.h
 FORMS += mainwindow.ui \
     dlgabout.ui
 TRANSLATIONS    = translations/translation_fr.ts

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "month.h"
 
-class QPlainTextEdit;
+class CTextEdit;
 
 class Document
 {
@@ -26,7 +26,7 @@ public:
     void setMemo(int year, int month, QString memo);
     QString getDailyText(int monthIndex, int day);
     void resize(int size);
-    void saveMonth(int year, int month, QPlainTextEdit **textFields);
+    void saveMonth(int year, int month, CTextEdit **textFields);
 
     bool writeFile();
     bool readFile();

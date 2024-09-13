@@ -9,6 +9,7 @@
 #include <QSettings>
 #include "dlgabout.h"
 #include "memodialog.h"
+#include "textedit.h"
 
 static char appName[] = "MiniApp Calendar";
 static char author[] = "cfrankb";
@@ -108,7 +109,7 @@ void MainWindow::initCalendar()
     m_date.setDate(m_date.year(), m_date.month(), 1);
     int day = m_date.dayOfWeek() % DAYS_PER_WEEK;
 
-    m_textFields =  new QPlainTextEdit * [Month::MAX_DAYS];
+    m_textFields =  new CTextEdit * [Month::MAX_DAYS];
     m_labelDays = new QLabel * [DAYS_PER_WEEK];
     m_labelNumbers = new QLabel * [Month::MAX_DAYS];
 
@@ -132,7 +133,7 @@ void MainWindow::initCalendar()
     for (y = 0; y < 6; y++) {
         for (x = 0; x < DAYS_PER_WEEK; x++) {
             dd = x + y * DAYS_PER_WEEK;
-            m_textFields[dd] =  new QPlainTextEdit(ui->centralWidget);
+            m_textFields[dd] =  new CTextEdit(ui->centralWidget);
             m_textFields[dd]->setObjectName(QString::fromUtf8("textFields") + QString::number(dd));
             m_textFields[dd]->setGeometry(QRect(baseX + (len + space) * x, baseY + y * (hei + space), len, hei));
             m_textFields[dd]->setFont(font);
@@ -180,7 +181,9 @@ void MainWindow::initCalendar()
 
 void MainWindow::colorTextbox()
 {
-    //qDebug("color textbox");
+    auto sender = static_cast<CTextEdit *>(QObject::sender());
+    auto text = sender->toPlainText();
+    sender->setStyleSheet(colorDate(sender->day(), text));
 }
 
 QString MainWindow::getMonthName(int month) {
@@ -251,6 +254,7 @@ void MainWindow::updateCalendar() {
                     m_textFields[dd]->setPlainText("");
                 }
                 m_textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
+                m_textFields[dd]->setDay(day_count);
             } else {
                 text = "";
                 m_textFields[dd]->setVisible(false);

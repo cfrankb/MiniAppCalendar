@@ -11,7 +11,7 @@ namespace Ui
 }
 
 class QLabel;
-class QPlainTextEdit;
+class CTextEdit;
 
 class MainWindow : public QMainWindow
 {
@@ -34,7 +34,7 @@ private:
 
     Ui::MainWindow *ui;
     QDate m_date;
-    QPlainTextEdit **m_textFields;
+    CTextEdit **m_textFields;
     QLabel **m_labelDays;
     QLabel **m_labelNumbers;
     QAction *m_recentFileActs[MaxRecentFiles];

@@ -1,6 +1,6 @@
 #include "document.h"
 #include <QString>
-#include <QtWidgets/QPlainTextEdit>
+#include "textedit.h"
 #include <QtDebug>
 
 
@@ -89,7 +89,7 @@ void Document::resize(int size) {
     m_dailyText = months;
 }
 
-void Document::saveMonth(int year, int month, QPlainTextEdit **textFields)
+void Document::saveMonth(int year, int month, CTextEdit **textFields)
 {
     int monthIndex = findMonth(year, month);
     bool original = monthIndex == -1;
