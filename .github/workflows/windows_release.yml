@@ -101,7 +101,7 @@ jobs:
             *.zip
 
       - name: Save build artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT }}
           path: ${{ runner.temp }}\build\release
