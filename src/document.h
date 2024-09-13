@@ -6,7 +6,8 @@
 #include "month.h"
 
 class CTextEdit;
-
+/// @brief Representation of the application document file
+///        Calendar file wrapper class.
 class Document
 {
 public:
@@ -30,7 +31,8 @@ public:
 
     bool writeFile();
     bool readFile();
-    static int monthAbs(int year, int month) {
+    static int monthAbs(int year, int month)
+    {
         return year * 12 + month - 1;
     }
 
@@ -42,17 +44,17 @@ public:
     static int readInt(FILE *);
     static QString restoreCR(QString str);
 
-    enum {
-        ERR_NONE=0,
-        ERR_READ=1,
-        ERR_WRITE=2,
-        ERR_SIGNATURE=3,
-        GROW_BY= 100,
+    enum
+    {
+        ERR_NONE = 0,
+        ERR_READ = 1,
+        ERR_WRITE = 2,
+        ERR_SIGNATURE = 3,
+        GROW_BY = 100,
         NOT_FOUND = -1
     };
 
 protected:
-
     void init();
     void forget();
 
@@ -62,7 +64,6 @@ protected:
     int m_totalMonths;
     int m_maxMonths;
     bool m_dirty;
-
 };
 
 #endif // DOCUMENT_H

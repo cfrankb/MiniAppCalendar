@@ -21,10 +21,11 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void setDocument( const QString& fileName );
+    void setDocument(const QString &fileName);
 
 private:
-    enum {
+    enum
+    {
         MaxRecentFiles = 4,
         DAYS_PER_WEEK = 7,
         RULE_CONTAINS = 0,
@@ -64,18 +65,16 @@ private:
     QString getErrorMessage(int msg) const;
 
     // file actions
-
     bool newFile();
     bool maybeSave();
     bool save();
     bool saveAs();
-    bool saveFile();
-    bool open(QString fileName="");
+    bool open(QString fileName = "");
 
     // events
 
     void closeEvent(QCloseEvent *event);
-    void resizeEvent (QResizeEvent *event);
+    void resizeEvent(QResizeEvent *event);
 
 private slots:
     void on_actionMemo_triggered();
@@ -87,12 +86,10 @@ private slots:
     void on_actionPrevious_triggered();
     void on_actionOpen_triggered();
     void openRecentFile();
-
     void on_actionAbout_Qt_triggered();
     void on_actionAbout_triggered();
     void on_actionhighlight_toggled(bool arg1);
     void on_actiongrey_out_past_toggled(bool arg1);
-
     void colorTextbox();
     void on_actionApply_rules_toggled(bool arg1);
     void on_actionMonth_Go_to_year_triggered();

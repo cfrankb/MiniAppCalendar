@@ -2,17 +2,18 @@
 #define MONTH_H
 
 #include <QString>
-
+/// @brief Storage Representation Interface for Month
 class Month
 {
 public:
     Month();
 
-    enum {
+    enum
+    {
         MAX_DAYS = 42
     };
 
-    QString & operator [] (int i);
+    QString &operator[](int i);
     void setText(int i, QString s);
 
     int month();

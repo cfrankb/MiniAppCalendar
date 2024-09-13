@@ -12,7 +12,7 @@ MemoDialog::MemoDialog(QWidget *parent)
 
     QGridLayout *gLayout = new QGridLayout;
 
-    gLayout->addWidget(memoText, 0, 0, Qt::AlignLeft|Qt::AlignTop);
+    gLayout->addWidget(memoText, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     buttonLayout->addWidget(okButton);
@@ -32,8 +32,10 @@ MemoDialog::MemoDialog(QWidget *parent)
     setWindowTitle(tr("Edit monthly memo"));
 }
 
+/// @brief Resize dialog box
+/// @param event
 void MemoDialog::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event)
-    memoText->setGeometry(QRect(0,0,width(), okButton->y() - 16));
+    memoText->setGeometry(QRect(0, 0, width(), okButton->y() - 16));
 }
