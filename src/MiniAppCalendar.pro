@@ -21,7 +21,7 @@ FORMS += mainwindow.ui \
 TRANSLATIONS    = translations/translation_fr.ts
 RESOURCES += MiniAppCalendar.qrc
 RC_FILE = MiniAppCalendar.rc
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.

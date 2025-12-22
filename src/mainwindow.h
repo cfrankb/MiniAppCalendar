@@ -12,6 +12,7 @@ namespace Ui
 
 class QLabel;
 class CTextEdit;
+class QPrinter;
 
 class MainWindow : public QMainWindow
 {
@@ -45,14 +46,13 @@ private:
 
     Document m_doc;
     bool m_ready;
-
     bool highlightToggle;
     bool greyOutPastToggle;
     bool applyRulesToggle;
-
     void restoreSettings();
 
     QString getMonthName(int);
+    QString getDayName(int i);
     int getMonthSize(int, int);
     void updateCalendar();
     void resizeControls(int width, int height);
@@ -62,6 +62,7 @@ private:
     void initFileMenu();
     void initToolBar();
     void warningMessage(QString message);
+    void saveCurrentMonth();
     QString getErrorMessage(int msg) const;
 
     // file actions
@@ -72,9 +73,11 @@ private:
     bool open(QString fileName = "");
 
     // events
-
     void closeEvent(QCloseEvent *event);
     void resizeEvent(QResizeEvent *event);
+
+    void printCalendar(QPrinter *printer);
+    void drawCalendar(QPainter *p, const QRect &rect);
 
 private slots:
     void on_actionMemo_triggered();
@@ -93,9 +96,8 @@ private slots:
     void colorTextbox();
     void on_actionApply_rules_toggled(bool arg1);
     void on_actionMonth_Go_to_year_triggered();
-
-private:
-    void saveCurrentMonth();
+    void onPrintPreview();
+    void onPrint();
 };
 
 #endif // MAINWINDOW_H

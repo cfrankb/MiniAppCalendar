@@ -7,6 +7,10 @@
 #include <QtDebug>
 #include <QtWidgets/QPlainTextEdit>
 #include <QSettings>
+#include <QPrintPreviewDialog>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QPainter>
 #include "dlgabout.h"
 #include "memodialog.h"
 #include "textedit.h"
@@ -40,6 +44,163 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
+void MainWindow::onPrintPreview()
+{
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPageOrientation(QPageLayout::Portrait);
+    printer.setPageSize(QPageSize::A4);
+
+    QPrintPreviewDialog preview(&printer, this);
+    connect(&preview, &QPrintPreviewDialog::paintRequested,
+            this, &MainWindow::printCalendar);
+
+    preview.exec();
+}
+
+
+void MainWindow::drawCalendar(QPainter *p, const QRect &rect)
+{
+    const int rows = 6;
+    const int cols = 7;
+
+    const int padding = 4;
+    QFont titleFont("Sans", 50, QFont::Bold); // 18
+    QFont cellFont("Sans", 10);
+    QFont textFont("Sans", 9);
+
+    p->setFont(titleFont);
+    QFontMetrics fmTitle = p->fontMetrics();
+    const int headerHeight = fmTitle.boundingRect(QStringLiteral("30")).height() +2;
+
+    p->setFont(cellFont);
+    QFontMetrics fmCell = p->fontMetrics();
+
+    const int dayNumberHeight =
+        fmCell.tightBoundingRect(QStringLiteral("30")).height()
+        + fmCell.descent();
+
+    const int cellW = rect.width() / cols;
+    const int cellH = (rect.height() - headerHeight) / (rows + 1); // +1 weekday row
+
+    int dayNumber = 1;
+    const int firstDay = m_date.dayOfWeek() % DAYS_PER_WEEK;
+    const int daysInMonth = getMonthSize(m_date.year(), m_date.month());
+
+
+
+    /* ======== DRAW DAY CELLS ======== */
+    for (int r = 1; r <= rows; ++r)
+    {
+        for (int c = 0; c < cols; ++c)
+        {
+            QRect cell(rect.left() + c * cellW,
+                       rect.top() + headerHeight + r * cellH,
+                       cellW,
+                       cellH);
+            p->drawRect(cell);
+
+            int dd = c + (r - 1) * DAYS_PER_WEEK;
+            if (dd < firstDay || dayNumber > daysInMonth)
+                continue;
+
+            /* --- Day number --- */
+            QRect dayRect = QRect(cell.left() + padding,
+                                  cell.top() + padding,
+                                  cell.width() - 2 * padding,
+                                  dayNumberHeight);
+
+            p->setPen(Qt::red);
+            p->drawRect(dayRect);
+            p->setPen(Qt::black);
+
+            p->setFont(cellFont);
+            p->drawText(cell.left() + padding,
+                        cell.top() + padding + fmCell.ascent(),
+                        QString::number(dayNumber));
+
+            /* --- Description text --- */
+            QString text = m_textFields[dd]->toPlainText();
+
+            if (!text.isEmpty())
+            {
+                QRect textRect = QRect(cell.left() + padding,
+                                       dayRect.bottom() + padding,
+                                       cell.width() - 2 * padding,
+                                       cell.height() - dayNumberHeight - 3 * padding);
+                p->save();
+                p->setClipRect(textRect);
+                p->setFont(textFont);
+
+                p->drawText(textRect,
+                            Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap,
+                            text);
+                p->restore();
+            }
+
+            ++dayNumber;
+        }
+    }
+
+    /* ======== TITLE ======== */
+    int year = m_date.year();
+    int month = m_date.month();
+
+    QString title = QString("%1 %2")
+                        .arg(getMonthName(month))
+                        .arg(year);
+
+    p->setFont(titleFont);
+    p->drawText(QRect(rect.left(), rect.top(),
+                      rect.width(), headerHeight),
+                Qt::AlignCenter, title);
+
+
+    /* ======== headerCell ======== */
+    QFont fontHeaderCell("Sans", 10, QFont::Bold);
+    p->setFont(fontHeaderCell);
+
+    QFontMetrics fmHeaderCell = p->fontMetrics();
+    const int headerTextHeight = fmHeaderCell.height();
+
+    const int headerY = rect.top() + headerHeight + 1 * cellH - headerTextHeight - 4 * fmHeaderCell.descent();
+    for (int i=0; i < DAYS_PER_WEEK; ++i) {
+        const QString dayName = getDayName(i);
+        // paint day name above row 1
+        QRect headerCell(rect.left() + i * cellW,
+                         headerY,
+                         cellW,
+                         headerTextHeight);
+
+        p->drawText(headerCell,
+                    Qt::AlignCenter | Qt::AlignVCenter,
+                    dayName);
+    }
+}
+
+
+void MainWindow::printCalendar(QPrinter *printer)
+{
+    QPainter painter(printer);
+    if (!painter.isActive())
+        return;
+
+    QRect page = printer->pageRect(QPrinter::DevicePixel).toRect();
+
+    drawCalendar(&painter, page);
+}
+
+
+void MainWindow::onPrint()
+{
+    QPrinter printer(QPrinter::HighResolution);
+    QPrintDialog dialog(&printer, this);
+
+    if (dialog.exec() == QDialog::Accepted)
+        printCalendar(&printer);
+}
+
 
 /// @brief Apply coloring rules
 /// @param text
@@ -112,6 +273,20 @@ const char *MainWindow::colorDate(int day_count, QString &text)
         }
     }
     return applyRulesToggle ? applyRules(text) : "";
+}
+
+
+QString MainWindow::getDayName(int i)
+{
+    static const QString days[] = {
+                            tr("Sunday"),
+                            tr("Monday"),
+                            tr("Tuesday"),
+                            tr("Wednesday"),
+                            tr("Thurday"),
+                            tr("Friday"),
+                            tr("Saturday")};
+    return days[i];
 }
 
 /// @brief Initialized the calendar. Setup the label and text boxes.
@@ -189,21 +364,12 @@ void MainWindow::initCalendar()
         }
     }
 
-    QString days[] = {
-        tr("Sunday"),
-        tr("Monday"),
-        tr("Tuesday"),
-        tr("Wednesday"),
-        tr("Thurday"),
-        tr("Friday"),
-        tr("Saturday")};
-
     for (x = 0; x < DAYS_PER_WEEK; x++)
     {
         m_labelDays[x] = new QLabel(ui->centralWidget);
         m_labelDays[x]->setObjectName(QString::fromUtf8("labelDay") + QString::number(x));
         m_labelDays[x]->setGeometry(QRect(baseX + (len + space) * x, baseY - space, 32, 10));
-        m_labelDays[x]->setText(days[x].mid(0, 3));
+        m_labelDays[x]->setText(getDayName(x).mid(0, 3));
     }
 }
 
@@ -593,11 +759,17 @@ void MainWindow::initFileMenu()
         connect(m_recentFileActs[i], SIGNAL(triggered()),
                 this, SLOT(openRecentFile()));
     }
-
     m_separatorAct[0] = ui->menu_File->addSeparator();
+
+    QMenu *menu = ui->menu_File;
+    QAction *actionPrint = menu->addAction(tr("Print"));
+    QAction *actionPrintPreview = menu->addAction(tr("Print Preview"));
+    connect(actionPrint, &QAction::triggered, this, &MainWindow::onPrint);
+    connect(actionPrintPreview, &QAction::triggered, this, &MainWindow::onPrintPreview);
+    menu->addSeparator();
+
     ui->actionClose->setStatusTip(tr("Close the application"));
     updateRecentFileActions();
-
     connect(ui->actionClose, SIGNAL(triggered()), this, SLOT(close()));
     ui->actionClose->setMenuRole(QAction::QuitRole);
     ui->menu_File->addAction(ui->actionClose);
