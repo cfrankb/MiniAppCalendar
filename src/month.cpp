@@ -15,7 +15,7 @@ QString &Month::operator[](int i)
 /// @brief Set the daily text at a given index
 /// @param i
 /// @param s
-void Month::setText(int i, QString s)
+void Month::setText(int i, const QString &s)
 {
     m_dailyText[i] = s;
 }
@@ -57,7 +57,7 @@ QString Month::memo()
 
 /// @brief Retrive montly memo
 /// @param m
-void Month::memo(const QString m)
+void Month::memo(const QString &m)
 {
     m_memo = m;
 }

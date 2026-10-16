@@ -2,8 +2,9 @@
 #include <QString>
 #include "textedit.h"
 #include <QtDebug>
+#include <QRegularExpression>
 
-QString signature = "MiniApp Calendar v1.0";
+const static QString signature = "MiniApp Calendar v1.0";
 
 Document::Document()
 {
@@ -140,7 +141,7 @@ void Document::saveMonth(int year, int month, CTextEdit **textFields)
 
     bool hasContent = false;
 
-    for (int day = 0; day < 41; day++)
+    for (int day = 0; day < DAYS_PER_WEEK * ROWS_PER_MONTH; day++)
     {
         QString str = textFields[day]->toPlainText();
 
@@ -181,7 +182,7 @@ void Document::saveMonth(int year, int month, CTextEdit **textFields)
 /// @return true for success, false for failure
 bool Document::writeFile()
 {
-    QByteArray ba = m_fileName.toLocal8Bit();
+    QByteArray ba = m_fileName.toUtf8();
     FILE *tfile = fopen(ba.constData(), "wb");
     if (!tfile)
     {
@@ -214,7 +215,7 @@ bool Document::writeFile()
 /// @return true for success, false for failure
 bool Document::readFile()
 {
-    QByteArray ba = m_fileName.toLocal8Bit();
+    QByteArray ba = m_fileName.toUtf8();
     FILE *sfile = fopen(ba.constData(), "rb");
     if (!sfile)
     {
@@ -223,9 +224,14 @@ bool Document::readFile()
         return false;
     }
 
-    QString str = readString(sfile);
+    QString str;
+    if (!readString(sfile, str)) {
+        fclose(sfile);
+        return false;
+    }
     if (str != signature)
     {
+        fclose(sfile);
         qDebug() << "wrong signature" << "\n";
         m_lastError = ERR_SIGNATURE;
         return false;
@@ -241,14 +247,22 @@ bool Document::readFile()
         Month &curr = m_dailyText[m_totalMonths];
         curr.year(readInt(sfile));
         curr.month(readInt(sfile));
-        char *t = readString(sfile);
+        QString t;
+        if (!readString(sfile,t)) {
+            fclose(sfile);
+            m_lastError = ERR_READ;
+            return false;
+        }
         curr.memo(t);
-        delete[] t;
         for (int x = 0; x < Month::MAX_DAYS; x++)
         {
-            char *t = readString(sfile);
+            QString t;
+            if (!readString(sfile,t)) {
+                fclose(sfile);
+                m_lastError = ERR_READ;
+                return false;
+            }
             m_dailyText[m_totalMonths][x] = t;
-            delete[] t;
         }
         m_totalMonths++;
         size--;
@@ -260,39 +274,68 @@ bool Document::readFile()
 /// @brief Write string to the file
 /// @param tfile
 /// @param str
-void Document::writeString(FILE *tfile, QString str)
+void Document::writeString(FILE *tfile, const QString &str)
 {
-    int size = strlen(str.toStdString().c_str());
-    // TODO implement full 32 bits
-    if (size < 255)
-    {
-        fwrite(&size, 1, 1, tfile);
-    }
-    else
-    {
-        unsigned char b = 255;
+    QByteArray ba = str.toUtf8();
+    uint32_t size = ba.size();
+
+    if (size < UINT8_MAX) {
+        uint8_t b = size;
         fwrite(&b, 1, 1, tfile);
-        fwrite(&size, 2, 1, tfile);
+    } else if (size < UINT16_MAX) {
+        uint8_t b = UINT8_MAX;
+        fwrite(&b, 1, 1, tfile);
+        uint16_t w = size;
+        fwrite(&w, 1, sizeof(w), tfile);
+    } else {
+        uint8_t b = UINT8_MAX;
+        fwrite(&b, 1, 1, tfile);
+        uint16_t w = UINT16_MAX;
+        fwrite(&w, 1, sizeof(w), tfile);
+        uint32_t ext = size;
+        fwrite(&ext, 1, sizeof(ext), tfile);
     }
-    QByteArray ba = str.toLocal8Bit(); // str.toAscii();
-    fwrite(ba.constData(), size, 1, tfile);
+
+    if (size)
+        fwrite(ba.constData(), 1, size, tfile);
 }
 
 /// @brief Read a string from file
 /// @param sfile
-char *Document::readString(FILE *sfile)
+/// @param str
+
+bool Document::readString(FILE *sfile, QString & str)
 {
-    unsigned long size = 0;
-    fread(&size, 1, 1, sfile);
-    // TODO: implement full 32bits
-    if (size == 255)
-    {
-        fread(&size, 2, 1, sfile);
+    str = "";
+    uint32_t size = 0;
+    if (fread(&size, 1, sizeof(uint8_t), sfile) != sizeof(uint8_t))
+        return false;
+
+    if (size == UINT8_MAX) {
+        if (fread(&size, 1, sizeof(uint16_t), sfile) != sizeof(uint16_t))
+            return false;
+        if (size == UINT16_MAX) {
+            if (fread(&size, 1, sizeof(uint32_t), sfile) != sizeof(uint32_t))
+                return false;
+        }
     }
+    if (size == UINT32_MAX)        // only value where size + 1 overflows
+        return false;
+
+    if (size == 0)
+        return true;
+
     char *buf = new char[size + 1];
+    if (!buf) return false;
+    size_t got = fread(buf, 1, size, sfile);
+    if (got != size) {
+        delete [] buf;
+        return false;
+    }
     buf[size] = 0;
-    fread(buf, size, 1, sfile);
-    return buf;
+    str = QString::fromUtf8(buf);
+    delete []buf;
+    return true;
 }
 
 /// @brief Read interger value from file
@@ -325,20 +368,7 @@ int Document::getLastError() const
 /// @return
 QString Document::restoreCR(QString str)
 {
-    if (str.lastIndexOf("\n") != -1 &&
-        str.lastIndexOf("\r\n") == -1)
-    {
-
-        QString tmp;
-        for (int i = 0; i < str.length(); i++)
-        {
-            if (str[i] != '\n')
-                tmp += str[i];
-            else
-                tmp += "\r\n";
-        }
-        str = tmp;
-    }
+    str.replace(QRegularExpression(QStringLiteral("\\r?\\n")), QStringLiteral("\r\n"));
     return str;
 }
 

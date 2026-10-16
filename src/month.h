@@ -10,18 +10,18 @@ public:
 
     enum
     {
-        MAX_DAYS = 42
+        MAX_DAYS = 42 // Days per week (7) * Rows (6)
     };
 
     QString &operator[](int i);
-    void setText(int i, QString s);
+    void setText(int i, const QString &s);
 
     int month();
     int year();
     void month(int m);
     void year(int);
     QString memo();
-    void memo(const QString m);
+    void memo(const QString& m);
 
 protected:
     int m_month;

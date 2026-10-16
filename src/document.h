@@ -38,8 +38,8 @@ public:
 
     int getLastError() const;
 
-    static void writeString(FILE *, QString);
-    static char *readString(FILE *);
+    static void writeString(FILE *, const QString &);
+    static bool readString(FILE *, QString &str);
     static void writeInt(FILE *, int);
     static int readInt(FILE *);
     static QString restoreCR(QString str);
@@ -50,8 +50,12 @@ public:
         ERR_READ = 1,
         ERR_WRITE = 2,
         ERR_SIGNATURE = 3,
+    };
+    enum {
         GROW_BY = 100,
-        NOT_FOUND = -1
+        NOT_FOUND = -1,
+        DAYS_PER_WEEK = 7,
+        ROWS_PER_MONTH=6
     };
 
 protected:

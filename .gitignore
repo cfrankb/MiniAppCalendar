@@ -1,6 +1,8 @@
 build-*
 src/build
 src/MiniAppCalendar.pro.user
+*.user
+.qmake*
 src/Makefile
 src/qrc_*.cpp
 src/moc_*.cpp

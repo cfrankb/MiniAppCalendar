@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include <QDate>
+#include <QSize>
 #include "document.h"
 
 namespace Ui
@@ -31,7 +32,10 @@ private:
         DAYS_PER_WEEK = 7,
         RULE_CONTAINS = 0,
         RULE_STARTSWITH = 1,
-        RULE_ENDSWITH = 2
+        RULE_ENDSWITH = 2,
+        CALENDAR_ROWS = 6,
+        BADGE_SIZE_DAY = 4,
+        BADGE_SIZE_NUMBER =4,
     };
 
     Ui::MainWindow *ui;
@@ -41,7 +45,7 @@ private:
     QLabel **m_labelNumbers;
     QAction *m_recentFileActs[MaxRecentFiles];
     QAction *m_separatorAct[1];
-    const char *colorDate(int day_count, QString &text);
+    const char *colorDate(int day_count, const QString &text);
     const char *applyRules(const QString &text);
 
     Document m_doc;
@@ -64,6 +68,8 @@ private:
     void warningMessage(QString message);
     void saveCurrentMonth();
     QString getErrorMessage(int msg) const;
+    QSize badgeSize(int charCount, const QFont &font);
+    const QFont getFont();
 
     // file actions
     bool newFile();

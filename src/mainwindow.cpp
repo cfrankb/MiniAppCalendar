@@ -62,8 +62,8 @@ void MainWindow::onPrintPreview()
 
 void MainWindow::drawCalendar(QPainter *p, const QRect &rect)
 {
-    const int rows = 6;
-    const int cols = 7;
+    const int rows = CALENDAR_ROWS;
+    const int cols = DAYS_PER_WEEK;
 
     const int padding = 4;
     QFont titleFont("Sans", 50, QFont::Bold); // 18
@@ -248,7 +248,7 @@ const char *MainWindow::applyRules(const QString &text)
 /// @param day_count target dat
 /// @param text text of the box
 /// @return coloring rule css to apply
-const char *MainWindow::colorDate(int day_count, QString &text)
+const char *MainWindow::colorDate(int day_count, const QString &text)
 {
     QDateTime now = QDateTime::currentDateTime();
     int today_year = 0;
@@ -276,6 +276,18 @@ const char *MainWindow::colorDate(int day_count, QString &text)
 }
 
 
+const QFont MainWindow::getFont()
+{
+    QFont font;
+#ifdef Q_WS_WIN
+    font.setPointSize(7);
+#else
+    font.setPointSize(9);
+#endif
+    font.setBold(true);
+    return font;
+}
+
 QString MainWindow::getDayName(int i)
 {
     static const QString days[] = {
@@ -293,15 +305,25 @@ QString MainWindow::getDayName(int i)
 ///        Connect signals and slots.
 void MainWindow::initCalendar()
 {
-    int x, y, dd;
-    int len = 90;
-    int hei = 80;
-    int space = 14;
-    int baseX = 10;
-    int baseY = 80;
-    int day_count = 1;
-
     QFont font;
+#ifdef Q_WS_WIN
+    font.setPointSize(14);
+#else
+    font.setPointSize(18);
+#endif
+    ui->labelMonth->setFont(font);
+
+    font = getFont();
+
+    QSize badge = badgeSize(BADGE_SIZE_NUMBER, font);
+    //int x, y;
+    const int len = badge.width();// 90;
+    const int hei = badge.height();// 80;
+    const int offset = 4;
+    const int space = 14 ;
+    const int baseX = 10;
+    const int baseY = 80;
+    int day_count = 1;
 
     m_date = QDate::currentDate();
     m_date.setDate(m_date.year(), m_date.month(), 1);
@@ -314,25 +336,11 @@ void MainWindow::initCalendar()
     QString text = QString("%1 %2").arg(getMonthName(m_date.month())).arg(m_date.year());
     ui->labelMonth->setText(text);
 
-#ifdef Q_WS_WIN
-    font.setPointSize(14);
-#else
-    font.setPointSize(18);
-#endif
-
-    ui->labelMonth->setFont(font);
-
-#ifdef Q_WS_WIN
-    font.setPointSize(7);
-#else
-    font.setPointSize(9);
-#endif
-
-    for (y = 0; y < 6; y++)
+    for (int y = 0; y < CALENDAR_ROWS; y++)
     {
-        for (x = 0; x < DAYS_PER_WEEK; x++)
+        for (int x = 0; x < DAYS_PER_WEEK; x++)
         {
-            dd = x + y * DAYS_PER_WEEK;
+            const int dd = x + y * DAYS_PER_WEEK;
             m_textFields[dd] = new CTextEdit(ui->centralWidget);
             m_textFields[dd]->setObjectName(QString::fromUtf8("textFields") + QString::number(dd));
             m_textFields[dd]->setGeometry(QRect(baseX + (len + space) * x, baseY + y * (hei + space), len, hei));
@@ -351,24 +359,38 @@ void MainWindow::initCalendar()
                 m_textFields[dd]->setVisible(false);
             }
             day_count++;
-            QString dayText = "";
+            const QString dayText = "";
             m_textFields[dd]->setStyleSheet(colorDate(day_count, dayText));
             m_labelNumbers[dd] = new QLabel(ui->centralWidget);
             m_labelNumbers[dd]->setObjectName(QString::fromUtf8("labelNum") + QString::number(dd));
-            m_labelNumbers[dd]->setGeometry(QRect(baseX + (len + space) * x + len - 32, baseY + y * (hei + space) - space, 32, 10));
+            m_labelNumbers[dd]->setFont(font);
+            const QSize badge = badgeSize(BADGE_SIZE_NUMBER, font);
+            m_labelNumbers[dd]->setGeometry(
+                QRect(
+                    baseX + (len + space) * x + len - badge.width(),
+                    baseY + y * (hei + space) - space -offset,
+                    badge.width(),
+                    badge.height()));
             m_labelNumbers[dd]->setText(text);
-            m_labelNumbers[dd]->setStyleSheet("QLabel { background-color : blue; color : yellow; }");
+            m_labelNumbers[dd]->setStyleSheet("QLabel { background-color : blue; color : yellow; font-weight: bold;}");
             m_labelNumbers[dd]->setVisible(!text.isEmpty());
             QObject::connect(m_textFields[dd], &QPlainTextEdit::textChanged,
                              this, &MainWindow::colorTextbox);
         }
     }
 
-    for (x = 0; x < DAYS_PER_WEEK; x++)
+    for (int x = 0; x < DAYS_PER_WEEK; x++)
     {
         m_labelDays[x] = new QLabel(ui->centralWidget);
         m_labelDays[x]->setObjectName(QString::fromUtf8("labelDay") + QString::number(x));
-        m_labelDays[x]->setGeometry(QRect(baseX + (len + space) * x, baseY - space, 32, 10));
+        m_labelDays[x]->setFont(font);
+        QSize badge = badgeSize(BADGE_SIZE_DAY, font);
+        m_labelDays[x]->setGeometry(
+            QRect(
+                baseX + (len + space) * x,
+                baseY - space, badge.width(),
+                badge.height()));
+        m_labelDays[x]->setStyleSheet("QLabel { font-weight: bold;}");
         m_labelDays[x]->setText(getDayName(x).mid(0, 3));
     }
 }
@@ -449,7 +471,7 @@ void MainWindow::updateCalendar()
     int monthSize = getMonthSize(m_date.year(), m_date.month());
     int monthIndex = m_doc.findMonth(m_date.year(), m_date.month());
 
-    for (y = 0; y < 6; y++)
+    for (y = 0; y < CALENDAR_ROWS; y++)
     {
         for (x = 0; x < DAYS_PER_WEEK; x++)
         {
@@ -485,31 +507,58 @@ void MainWindow::updateCalendar()
 
 void MainWindow::resizeControls(int width, int height)
 {
+    const QRect rectLabel = ui->labelMonth->frameGeometry();
+    const QRect rectStatusbar = ui->statusBar->frameGeometry();
+    const QFont font = getFont();
 
-    QRect rectLabel = ui->labelMonth->frameGeometry();
-    QRect rectStatusbar = ui->statusBar->frameGeometry();
+    const int spaceX = 4;
+    const int spaceY = 14;
+    const int baseX = 10;
+    const int baseY = rectLabel.y() + rectLabel.height() + 16;
+    const int offsetY = 4;
+    const int hei = -spaceY + (height - baseY - rectStatusbar.height()) / CALENDAR_ROWS;
+    const int len = -spaceX + (width - baseX) / DAYS_PER_WEEK;
 
-    int spaceX = 4;
-    int spaceY = 14;
-    int baseX = 10;
-    int baseY = rectLabel.y() + rectLabel.height() + 16;
-    int hei = -spaceY + (height - baseY - rectStatusbar.height()) / 6;
-    int len = -spaceX + (width - baseX) / 7;
-
-    for (int y = 0; y < 6; y++)
+    for (int y = 0; y < CALENDAR_ROWS; y++)
     {
         for (int x = 0; x < DAYS_PER_WEEK; x++)
         {
             int dd = x + y * DAYS_PER_WEEK;
             m_textFields[dd]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY + y * (hei + spaceY), len, hei));
-            m_labelNumbers[dd]->setGeometry(QRect(baseX + (len + spaceX) * x + len - 32, baseY + y * (hei + spaceY) - spaceY, 32, 10));
+            QSize badge = badgeSize(BADGE_SIZE_NUMBER, font);
+            m_labelNumbers[dd]->setGeometry(
+                QRect(
+                    baseX + (len + spaceX) * x + len - badge.width(),
+                    baseY + y * (hei + spaceY) - spaceY - offsetY,
+                    badge.width(),
+                    badge.height()));
         }
     }
 
-    for (int x = 0; x < 7; x++)
+    for (int x = 0; x < DAYS_PER_WEEK; x++)
     {
-        m_labelDays[x]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY - spaceY, 32, 10));
+        const QSize badge = badgeSize(BADGE_SIZE_DAY, font);
+        m_labelDays[x]->setGeometry(QRect(baseX + (len + spaceX) * x, baseY - spaceY  - offsetY, badge.width(), badge.height()));
     }
+}
+
+/// @brief Compute a tight bounding size for a small badge label.
+///
+/// The day-number badges hold a 2-digit day (2 characters) and the weekday
+/// headers hold a 3-letter abbreviation (3 characters). Rather than a fixed
+/// 32x10 box, measure the glyph advance of the label's own font so the badge
+/// wraps its text tightly at any point size.
+QSize MainWindow::badgeSize(int charCount, const QFont &font)
+{
+    const QFontMetrics fm(font);
+    int width = 0;
+    for (int i = 0; i < charCount; i++)
+        width += fm.horizontalAdvance(QLatin1Char('0'));
+    // 1px padding on each side so the glyph never touches the badge edge.
+    width += 2;
+
+    int height = fm.height() + 2;
+    return QSize(width, height);
 }
 
 void MainWindow::saveCurrentMonth()

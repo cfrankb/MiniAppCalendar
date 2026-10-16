@@ -6,7 +6,7 @@ set(QT_MIN_VERSION
     5.15.0
 )
 
-find_package(Qt5 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt5 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Widgets Network PrintSupport)
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++0x")
 
@@ -17,6 +17,7 @@ set(SOURCES
     month.cpp 
     memodialog.cpp 
     dlgabout.cpp
+    textedit.cpp
 )
 
 set(UI_FILES 
@@ -41,4 +42,4 @@ include_directories(${QT_INCLUDES})
 QT5_WRAP_UI(SOURCES ${UI_FILES})
 QT5_ADD_RESOURCES(RC_SRC ${RCS})
 add_executable(MiniAppCalendar ${SOURCES} ${UI_SRC} ${UI_FILES}  ${MOC_HEADERS} ${RC_SRC})
-target_link_libraries(MiniAppCalendar Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Network)
+target_link_libraries(MiniAppCalendar Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Network Qt5::PrintSupport)
