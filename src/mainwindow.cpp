@@ -50,7 +50,7 @@ void MainWindow::onPrintPreview()
 {
     QPrinter printer(QPrinter::HighResolution);
     printer.setPageOrientation(QPageLayout::Portrait);
-    printer.setPageSize(QPageSize::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
 
     QPrintPreviewDialog preview(&printer, this);
     connect(&preview, &QPrintPreviewDialog::paintRequested,
